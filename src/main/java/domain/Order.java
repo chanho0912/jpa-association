@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -23,14 +24,13 @@ public class Order {
 
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id")
-    private List<OrderItem> orderItems;
+    private List<OrderItem> orderItems = new ArrayList<>();
 
     public Order() {
     }
 
-    public Order(String orderNumber, List<OrderItem> orderItems) {
+    public Order(String orderNumber) {
         this.orderNumber = orderNumber;
-        this.orderItems = orderItems;
     }
 
     public Long getId() {

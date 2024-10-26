@@ -19,7 +19,6 @@ import persistence.sql.ddl.query.DropQueryBuilder;
 import persistence.sql.dml.query.CustomSelectQueryBuilder;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -179,7 +178,7 @@ public class EntityManagerTest {
     @DisplayName("Entity Manager Select without Join")
     void testSelectWithJoin() throws Exception {
         EntityManager entityManager = new EntityManagerImpl(new JdbcTemplate(server.getConnection()), new PersistenceContextImpl());
-        Order order = new Order("order_number", new ArrayList<>());
+        Order order = new Order("order_number");
         entityManager.persist(order);
 
         String customSelectQuery = new CustomSelectQueryBuilder(Order.class).join(OrderItem.class).build();
@@ -189,6 +188,50 @@ public class EntityManagerTest {
                 () -> assertThat(persistedOrder.getId()).isEqualTo(1L),
                 () -> assertThat(persistedOrder.getOrderNumber()).isEqualTo("order_number"),
                 () -> assertThat(persistedOrder.getOrderItems()).isEmpty()
+        );
+    }
+
+    @Test
+    @DisplayName("Insert 시 연관 테이블이 없으면 Insert되지 않는다.")
+    void testInsertWithoutAssociationTable() throws SQLException {
+
+        EntityManager entityManager = new EntityManagerImpl(new JdbcTemplate(server.getConnection()), new PersistenceContextImpl());
+        Order order = new Order("order_number");
+        entityManager.persist(order);
+
+        Order persistedOrder = entityManager.find(Order.class, 1L);
+        assertAll(
+                () -> assertThat(persistedOrder.getId()).isEqualTo(1L),
+                () -> assertThat(persistedOrder.getOrderNumber()).isEqualTo("order_number"),
+                () -> assertThat(persistedOrder.getOrderItems()).isEmpty()
+        );
+    }
+
+    @Test
+    @DisplayName("Insert 시 연관 테이블까지 Insert 되어야 한다.")
+    void testInsertWithAssociationTable() throws SQLException {
+        EntityManager entityManager = new EntityManagerImpl(new JdbcTemplate(server.getConnection()), new PersistenceContextImpl());
+        Order order = new Order("order_number");
+        OrderItem orderItem1 = new OrderItem("product1", 1);
+        OrderItem orderItem2 = new OrderItem("product2", 2);
+
+        order.getOrderItems().add(orderItem1);
+        order.getOrderItems().add(orderItem2);
+
+        entityManager.persist(order);
+
+        Order persistedOrder = entityManager.find(Order.class, 1L);
+
+        assertAll(
+                () -> assertThat(persistedOrder.getId()).isEqualTo(1L),
+                () -> assertThat(persistedOrder.getOrderNumber()).isEqualTo("order_number"),
+                () -> assertThat(persistedOrder.getOrderItems()).hasSize(2),
+                () -> assertThat(persistedOrder.getOrderItems().get(0).getId()).isEqualTo(1L),
+                () -> assertThat(persistedOrder.getOrderItems().get(0).getProduct()).isEqualTo("product1"),
+                () -> assertThat(persistedOrder.getOrderItems().get(0).getQuantity()).isEqualTo(1),
+                () -> assertThat(persistedOrder.getOrderItems().get(1).getId()).isEqualTo(2L),
+                () -> assertThat(persistedOrder.getOrderItems().get(1).getProduct()).isEqualTo("product2"),
+                () -> assertThat(persistedOrder.getOrderItems().get(1).getQuantity()).isEqualTo(2)
         );
     }
 

@@ -12,14 +12,14 @@ class CustomSelectQueryBuilderTest {
 
     @Test
     void testSelectSingleTable() {
-        Order order = new Order("order_number", new ArrayList<>());
+        Order order = new Order("order_number");
         String selectQuery = new CustomSelectQueryBuilder(order.getClass()).build();
         assertThat(selectQuery).isEqualTo("SELECT t_ord.id AS t_ord_id, t_ord.orderNumber AS t_ord_orderNumber FROM orders t_ord;");
     }
 
     @Test
     void testSelectSingleTableWithJoin() {
-        Order order = new Order("order_number", new ArrayList<>());
+        Order order = new Order("order_number");
         OrderItem orderItem = new OrderItem("item_name", 1);
 
         String selectQuery = new CustomSelectQueryBuilder(order.getClass())

@@ -25,4 +25,16 @@ public class OrderItem {
         this.product = product;
         this.quantity = quantity;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getProduct() {
+        return product;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
 }
