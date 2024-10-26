@@ -2,6 +2,8 @@ package persistence.entity;
 
 import database.DatabaseServer;
 import database.H2;
+import domain.Order;
+import domain.OrderItem;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,8 +16,10 @@ import org.junit.jupiter.api.Test;
 import persistence.sql.H2Dialect;
 import persistence.sql.ddl.query.CreateTableQueryBuilder;
 import persistence.sql.ddl.query.DropQueryBuilder;
+import persistence.sql.dml.query.CustomSelectQueryBuilder;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -49,24 +53,33 @@ public class EntityManagerTest {
     }
 
     private static DatabaseServer server;
+    private static JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void setUp() throws SQLException {
         server = new H2();
         server.start();
 
-        String query2 = new CreateTableQueryBuilder(new H2Dialect(), EntityManagerTestEntityWithIdentityId.class).build();
+        String query = new CreateTableQueryBuilder(new H2Dialect(), EntityManagerTestEntityWithIdentityId.class).build();
+        String query2 = new CreateTableQueryBuilder(new H2Dialect(), Order.class).build();
+        String query3 = new CreateTableQueryBuilder(new H2Dialect(), OrderItem.class).build();
 
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(server.getConnection());
+        jdbcTemplate = new JdbcTemplate(server.getConnection());
+        jdbcTemplate.execute(query);
         jdbcTemplate.execute(query2);
+        jdbcTemplate.execute(query3);
     }
 
     @AfterEach
     void tearDown() throws SQLException {
-        String query2 = new DropQueryBuilder(EntityManagerTestEntityWithIdentityId.class).build();
+        String query = new DropQueryBuilder(EntityManagerTestEntityWithIdentityId.class).build();
+        String query2 = new DropQueryBuilder(Order.class).build();
+        String query3 = new DropQueryBuilder(OrderItem.class).build();
 
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(server.getConnection());
+        jdbcTemplate = new JdbcTemplate(server.getConnection());
+        jdbcTemplate.execute(query);
         jdbcTemplate.execute(query2);
+        jdbcTemplate.execute(query3);
         server.stop();
     }
 
@@ -161,4 +174,22 @@ public class EntityManagerTest {
         );
         assertThat(e.getMessage()).isEqualTo("Entity is not managed: EntityManagerTestEntityWithIdentityId");
     }
+
+    @Test
+    @DisplayName("Entity Manager Select without Join")
+    void testSelectWithJoin() throws Exception {
+        EntityManager entityManager = new EntityManagerImpl(new JdbcTemplate(server.getConnection()), new PersistenceContextImpl());
+        Order order = new Order("order_number", new ArrayList<>());
+        entityManager.persist(order);
+
+        String customSelectQuery = new CustomSelectQueryBuilder(Order.class).join(OrderItem.class).build();
+        Order persistedOrder = jdbcTemplate.queryForObject(customSelectQuery, new EntityRowMapper<>(Order.class));
+//        Order persistedOrder = entityManager.find(Order.class, 1L);
+        assertAll(
+                () -> assertThat(persistedOrder.getId()).isEqualTo(1L),
+                () -> assertThat(persistedOrder.getOrderNumber()).isEqualTo("order_number"),
+                () -> assertThat(persistedOrder.getOrderItems()).isEmpty()
+        );
+    }
+
 }

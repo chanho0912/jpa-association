@@ -1,70 +1,56 @@
 package persistence.sql.dml.query;
 
-import org.jetbrains.annotations.NotNull;
-import persistence.sql.Queryable;
 import persistence.sql.definition.TableDefinition;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.StringJoiner;
 
 public class CustomSelectQueryBuilder {
 
-    private static final String DEFAULT_TABLE_ALIAS = "t";
-    private static final String DEFAULT_JOIN_TABLE_ALIAS = "jt";
-
     private final TableDefinition tableDefinition;
     private final List<String> columns = new ArrayList<>();
-    private final Map<String, String> columnAliases = new HashMap<>();
-    private final String tableAlias;
 
     private TableDefinition joinTableDefinition;
-    private String joinTableAlias;
     private final List<String> joinTableColumns = new ArrayList<>();
-    private final Map<String, String> joinTableColumnAliases = new HashMap<>();
 
-    public CustomSelectQueryBuilder(TableDefinition tableDefinition) {
+    public CustomSelectQueryBuilder(Class<?> entityClass) {
+        final TableDefinition tableDefinition = new TableDefinition(entityClass);
         this.tableDefinition = tableDefinition;
-        this.tableAlias = tableDefinition.getTableName().substring(0, 3).toLowerCase();
         tableDefinition.withIdColumns().forEach(column -> {
                     columns.add(column.getColumnName());
-                    columnAliases.put(column.getColumnName(), getAlias(tableDefinition, column));
                 }
         );
     }
 
-    public CustomSelectQueryBuilder join(TableDefinition joinTableDefinition) {
+    public CustomSelectQueryBuilder join(Class<?> joinEntityClass) {
+        final TableDefinition joinTableDefinition = new TableDefinition(joinEntityClass);
         this.joinTableDefinition = joinTableDefinition;
-        this.joinTableAlias = joinTableDefinition.getTableName().substring(0, 3).toLowerCase();
         joinTableDefinition.withIdColumns().forEach(column -> {
                     joinTableColumns.add(column.getColumnName());
-                    joinTableColumnAliases.put(column.getColumnName(), getAlias(joinTableDefinition, column));
                 }
         );
         return this;
-    }
-
-    @NotNull
-    private String getAlias(TableDefinition tableDefinition, Queryable column) {
-        return tableDefinition.getTableName() + "_" + column.getColumnName();
     }
 
     public String build() {
         final StringBuilder query = new StringBuilder("SELECT ");
         query.append(columnsClause());
         query.append(" FROM ");
-        query.append(tableDefinition.getTableName()).append(" ").append(getTableAlias());
+        query.append(tableDefinition.getTableName()).append(" ").append(
+                AliasRule.getTableAlias(tableDefinition)
+        );
         if (joinTableDefinition != null) {
             query.append(" LEFT JOIN ");
-            query.append(joinTableDefinition.getTableName()).append(" ").append(getJoinTableAlias());
+            query.append(joinTableDefinition.getTableName()).append(" ").append(
+                    AliasRule.getJoinTableAlias(joinTableDefinition)
+            );
             query.append(" ON ");
-            query.append(joinTableDefinition.getTableName());
+            query.append(AliasRule.getJoinTableAlias(joinTableDefinition));
             query.append(".");
             query.append(joinTableDefinition.getTableId().getColumnName());
             query.append(" = ");
-            query.append(tableDefinition.getTableName());
+            query.append(AliasRule.getTableAlias(tableDefinition));
             query.append(".");
             query.append(tableDefinition.getTableId().getColumnName());
         }
@@ -76,19 +62,15 @@ public class CustomSelectQueryBuilder {
         final StringJoiner joiner = new StringJoiner(", ");
 
         columns.forEach(column -> {
-            String aliased = getTableAlias() + "." + column;
-            if (columnAliases.containsKey(column)) {
-                aliased += " AS " + columnAliases.get(column);
-            }
+            String aliased = AliasRule.getTableAlias(tableDefinition) + "." + column;
+            aliased += " AS " + AliasRule.getColumnAlias(tableDefinition, column);
 
             joiner.add(aliased);
         });
 
         joinTableColumns.forEach(column -> {
-            String aliased = getJoinTableAlias() + "." + column;
-            if (joinTableColumnAliases.containsKey(column)) {
-                aliased += " AS " + joinTableColumnAliases.get(column);
-            }
+            String aliased = AliasRule.getJoinTableAlias(joinTableDefinition) + "." + column;
+            aliased += " AS " + AliasRule.getJoinColumnAlias(joinTableDefinition, column);
 
             joiner.add(aliased);
         });
@@ -96,11 +78,4 @@ public class CustomSelectQueryBuilder {
         return joiner.toString();
     }
 
-    private String getTableAlias() {
-        return DEFAULT_TABLE_ALIAS + "_" + tableAlias;
-    }
-
-    private String getJoinTableAlias() {
-        return DEFAULT_JOIN_TABLE_ALIAS + "_" + joinTableAlias;
-    }
 }

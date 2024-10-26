@@ -9,6 +9,8 @@ import persistence.sql.Queryable;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -17,7 +19,9 @@ import java.util.stream.Stream;
 public class TableDefinition {
 
     private final String tableName;
+    private final Class<?> entityClass;
     private final List<TableColumn> columns;
+    private final List<TableCollectionDefinition> collectionColumns;
     private final TableId tableId;
 
     public TableDefinition(Class<?> entityClass) {
@@ -26,8 +30,45 @@ public class TableDefinition {
         final Field[] fields = entityClass.getDeclaredFields();
 
         this.tableName = determineTableName(entityClass);
+        this.entityClass = entityClass;
+        this.collectionColumns = determineCollectionColumns(entityClass);
         this.columns = createTableColumns(fields);
         this.tableId = new TableId(fields);
+    }
+
+    @NotNull
+    private static List<TableCollectionDefinition> determineCollectionColumns(Class<?> entityClass) {
+        Field[] fields = entityClass.getDeclaredFields();
+        List<Field> collectionFields = Arrays.stream(fields)
+                .filter(field -> Collection.class.isAssignableFrom(field.getType()))
+                .toList();
+
+        if (collectionFields.isEmpty()) {
+            return List.of();
+        }
+
+        return collectionFields.stream()
+                .map(field -> {
+                    if (!Collection.class.isAssignableFrom(field.getType())) {
+                        throw new IllegalArgumentException("collection fields must be a Collection");
+                    }
+                    Class<?> actualType = getGenericActualType(field);
+                    TableDefinition tableDefinition = new TableDefinition(actualType);
+                    return new TableCollectionDefinition(tableDefinition, actualType, field.getName());
+                })
+                .toList();
+    }
+
+    @NotNull
+    private static Class<?> getGenericActualType(Field field) {
+        final Type genericType = field.getGenericType();
+        final ParameterizedType parameterizedType = (ParameterizedType) genericType;
+        final Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+        if (actualTypeArguments.length != 1) {
+            throw new IllegalArgumentException("Collection must have exactly one generic type");
+        }
+
+        return (Class<?>) actualTypeArguments[0];
     }
 
     @NotNull
@@ -79,6 +120,10 @@ public class TableDefinition {
         }
     }
 
+    public Class<?> getEntityClass() {
+        return entityClass;
+    }
+
     public TableId getTableId() {
         return tableId;
     }
@@ -111,5 +156,9 @@ public class TableDefinition {
         return withIdColumns().stream()
                 .filter(column -> column.hasValue(entity))
                 .toList();
+    }
+
+    public List<TableCollectionDefinition> getCollectionColumns() {
+        return collectionColumns;
     }
 }

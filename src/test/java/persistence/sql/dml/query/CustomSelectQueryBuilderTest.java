@@ -3,7 +3,6 @@ package persistence.sql.dml.query;
 import domain.Order;
 import domain.OrderItem;
 import org.junit.jupiter.api.Test;
-import persistence.sql.definition.TableDefinition;
 
 import java.util.ArrayList;
 
@@ -14,25 +13,21 @@ class CustomSelectQueryBuilderTest {
     @Test
     void testSelectSingleTable() {
         Order order = new Order("order_number", new ArrayList<>());
-        TableDefinition tableDefinition = new TableDefinition(order.getClass());
-
-        String selectQuery = new CustomSelectQueryBuilder(tableDefinition).build();
-        assertThat(selectQuery).isEqualTo("SELECT t_ord.id AS orders_id, t_ord.orderNumber AS orders_orderNumber FROM orders t_ord;");
+        String selectQuery = new CustomSelectQueryBuilder(order.getClass()).build();
+        assertThat(selectQuery).isEqualTo("SELECT t_ord.id AS t_ord_id, t_ord.orderNumber AS t_ord_orderNumber FROM orders t_ord;");
     }
 
     @Test
     void testSelectSingleTableWithJoin() {
         Order order = new Order("order_number", new ArrayList<>());
-        TableDefinition orderTableDefinition = new TableDefinition(order.getClass());
         OrderItem orderItem = new OrderItem("item_name", 1);
-        TableDefinition orderItemTableDefinition = new TableDefinition(orderItem.getClass());
 
-        String selectQuery = new CustomSelectQueryBuilder(orderTableDefinition)
-                .join(orderItemTableDefinition)
+        String selectQuery = new CustomSelectQueryBuilder(order.getClass())
+                .join(orderItem.getClass())
                 .build();
 
-        assertThat(selectQuery).isEqualTo("SELECT t_ord.id AS orders_id, t_ord.orderNumber AS orders_orderNumber, " +
-                "jt_ord.id AS order_items_id, jt_ord.product AS order_items_product, jt_ord.quantity AS order_items_quantity " +
-                "FROM orders t_ord LEFT JOIN order_items jt_ord ON order_items.id = orders.id;");
+        assertThat(selectQuery).isEqualTo("SELECT t_ord.id AS t_ord_id, t_ord.orderNumber AS t_ord_orderNumber, " +
+                "jt_ord.id AS jt_ord_id, jt_ord.product AS jt_ord_product, jt_ord.quantity AS jt_ord_quantity " +
+                "FROM orders t_ord LEFT JOIN order_items jt_ord ON jt_ord.id = t_ord.id;");
     }
 }

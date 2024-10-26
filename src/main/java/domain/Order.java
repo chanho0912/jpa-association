@@ -32,4 +32,16 @@ public class Order {
         this.orderNumber = orderNumber;
         this.orderItems = orderItems;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
 }
