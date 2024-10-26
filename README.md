@@ -9,9 +9,9 @@ public class CustomSelect {
 
 }
 ```
-[ ] Custom Select Query Builder 구현
-- [ ] join table이 없는 경우 구현
-- [ ] join table이 있는 경우 구현
+- [x] Custom Select Query Builder 구현
+  - [x] join table이 없는 경우 구현
+  - [x] join table이 있는 경우 구현
 
 ## 요구사항 2 - Join Query 를 만들어 Entity 화 해보기
 > FetchType.EAGER 인 경우

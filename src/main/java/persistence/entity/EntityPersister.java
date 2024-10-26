@@ -30,16 +30,12 @@ public class EntityPersister {
     }
 
     public boolean hasId(Object entity) {
-        putTableDefinitionIfAbsent(entity);
-
-        final TableDefinition tableDefinition = tableDefinitions.get(entity.getClass());
+        final TableDefinition tableDefinition = getTableDefinition(entity);
         return tableDefinition.hasId(entity);
     }
 
     public Serializable getEntityId(Object entity) {
-        putTableDefinitionIfAbsent(entity);
-
-        final TableDefinition tableDefinition = tableDefinitions.get(entity.getClass());
+        final TableDefinition tableDefinition = getTableDefinition(entity);
         if (tableDefinition.hasId(entity)) {
             return tableDefinition.getIdValue(entity);
         }
@@ -48,8 +44,6 @@ public class EntityPersister {
     }
 
     public Object insert(Object entity) {
-        putTableDefinitionIfAbsent(entity);
-
         final String query = insertQueryBuilder.build(entity);
         final Serializable id = jdbcTemplate.insertAndReturnKey(query);
         bindId(id, entity);
@@ -59,7 +53,7 @@ public class EntityPersister {
     private void bindId(Serializable id, Object entity) {
         try {
             final Class<?> entityClass = entity.getClass();
-            final TableDefinition tableDefinition = new TableDefinition(entityClass);
+            final TableDefinition tableDefinition = getTableDefinition(entity);
             final TableId tableId = tableDefinition.getTableId();
 
             final Field objectDeclaredField = entityClass.getDeclaredField(tableId.getDeclaredName());
@@ -81,16 +75,15 @@ public class EntityPersister {
     }
 
     public void update(Object entity) {
-        putTableDefinitionIfAbsent(entity);
-
         final String query = updateQueryBuilder.build(entity);
         jdbcTemplate.execute(query);
     }
 
-    private void putTableDefinitionIfAbsent(Object entity) {
+    private TableDefinition getTableDefinition(Object entity) {
         if (!tableDefinitions.containsKey(entity.getClass())) {
             tableDefinitions.put(entity.getClass(), new TableDefinition(entity.getClass()));
         }
+        return tableDefinitions.get(entity.getClass());
     }
 
     public void delete(Object entity) {

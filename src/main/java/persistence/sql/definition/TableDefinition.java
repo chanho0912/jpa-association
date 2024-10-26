@@ -10,6 +10,7 @@ import persistence.sql.Queryable;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -54,6 +55,7 @@ public class TableDefinition {
         return Arrays.stream(fields)
                 .filter(field -> !field.isAnnotationPresent(Id.class))
                 .filter(field -> !field.isAnnotationPresent(Transient.class))
+                .filter(field -> !Collection.class.isAssignableFrom(field.getType()))
                 .map(TableColumn::new)
                 .toList();
     }
@@ -95,9 +97,10 @@ public class TableDefinition {
 
     public List<? extends Queryable> withIdColumns() {
         return Stream.concat(
-                Stream.of(tableId),
-                columns.stream()
-        ).toList();
+                        Stream.of(tableId),
+                        columns.stream()
+                )
+                .toList();
     }
 
     public List<? extends Queryable> withoutIdColumns() {
