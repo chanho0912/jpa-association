@@ -8,20 +8,18 @@ import persistence.sql.Queryable;
 import java.lang.reflect.Field;
 import java.util.List;
 
-public class TableCollectionDefinition {
+public class TableAssociationDefinition {
     private final TableDefinition associatedTableDefinition;
     private final JoinColumn joinColumn;
-    private final ColumnDefinition columnDefinition;
     private final boolean isOneToMany;
     private final FetchType fetchType;
     private final Class<?> entityClass;
     private final String fieldName;
 
-    public TableCollectionDefinition(Class<?> entityClass,
-                                     Field field) {
+    public TableAssociationDefinition(Class<?> entityClass,
+                                      Field field) {
         this.associatedTableDefinition = new TableDefinition(entityClass);
         this.joinColumn = getJoinColumn(associatedTableDefinition);
-        this.columnDefinition = new ColumnDefinition(field);
         this.entityClass = entityClass;
         this.fieldName = field.getName();
         this.isOneToMany = field.isAnnotationPresent(OneToMany.class);

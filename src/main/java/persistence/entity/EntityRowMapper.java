@@ -2,7 +2,7 @@ package persistence.entity;
 
 import jdbc.RowMapper;
 import persistence.sql.Queryable;
-import persistence.sql.definition.TableCollectionDefinition;
+import persistence.sql.definition.TableAssociationDefinition;
 import persistence.sql.definition.TableDefinition;
 import persistence.sql.dml.query.AliasRule;
 
@@ -28,22 +28,22 @@ public class EntityRowMapper<T> implements RowMapper<T> {
 
             for (Queryable field : tableDefinition.withIdColumns()) {
                 setField(resultSet, clazz, field, instance,
-                        (columnName) -> AliasRule.getColumnAlias(tableDefinition, columnName));
+                        (columnName) -> AliasRule.getColumnAlias(tableDefinition.getTableName(), columnName));
             }
 
-            for (TableCollectionDefinition collection : tableDefinition.getCollectionColumns()) {
-                final Object collectionInstance = collection.getEntityClass().getDeclaredConstructor().newInstance();
-                for (Queryable field : collection.getAssociatedTableDefinition().withIdColumns()) {
-                    setField(resultSet, collection.getEntityClass(), field, collectionInstance,
-                            (columnName) -> AliasRule.getJoinColumnAlias(collection.getAssociatedTableDefinition(), columnName));
+            for (TableAssociationDefinition association : tableDefinition.getAssociations()) {
+                final Object collectionInstance = association.getEntityClass().getDeclaredConstructor().newInstance();
+                for (Queryable field : association.getAssociatedTableDefinition().withIdColumns()) {
+                    setField(resultSet, association.getEntityClass(), field, collectionInstance,
+                            (columnName) -> AliasRule.getJoinColumnAlias(association.getAssociatedTableDefinition().getTableName(), columnName));
                 }
 
-                final Collection<Object> entityCollection = getCollectionField(instance, collection);
+                final Collection<Object> entityCollection = getCollectionField(instance, association);
 
                 if (isRowEmpty(resultSet,
-                        collection.getAssociatedTableDefinition().withIdColumns()
+                        association.getAssociatedTableDefinition().withIdColumns()
                                 .stream()
-                                .map(queryable -> AliasRule.getJoinColumnAlias(collection.getAssociatedTableDefinition(),
+                                .map(queryable -> AliasRule.getJoinColumnAlias(association.getAssociatedTableDefinition().getTableName(),
                                         queryable.getColumnName()))
                                 .toList())
                 ) {
@@ -59,7 +59,7 @@ public class EntityRowMapper<T> implements RowMapper<T> {
     }
 
     private Collection<Object> getCollectionField(
-            T instance, TableCollectionDefinition collection
+            T instance, TableAssociationDefinition collection
     ) throws NoSuchFieldException, IllegalAccessException {
         final Field collectionField = clazz.getDeclaredField(collection.getFieldName());
         final boolean wasAccessible = collectionField.canAccess(instance);

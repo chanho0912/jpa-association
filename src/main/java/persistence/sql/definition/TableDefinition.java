@@ -22,7 +22,7 @@ public class TableDefinition {
     private final String tableName;
     private final Class<?> entityClass;
     private final List<TableColumn> columns;
-    private final List<TableCollectionDefinition> collectionColumns;
+    private final List<TableAssociationDefinition> associations;
     private final List<TableAssociatedColumn> associatedColumns;
     private final TableId tableId;
 
@@ -33,7 +33,7 @@ public class TableDefinition {
 
         this.tableName = determineTableName(entityClass);
         this.entityClass = entityClass;
-        this.collectionColumns = determineCollectionColumns(entityClass);
+        this.associations = determineAssociations(entityClass);
         this.columns = createTableColumns(fields);
         this.tableId = new TableId(fields);
         this.associatedColumns = determineJoinColumns(tableId, fields);
@@ -53,7 +53,7 @@ public class TableDefinition {
     }
 
     @NotNull
-    private static List<TableCollectionDefinition> determineCollectionColumns(Class<?> entityClass) {
+    private static List<TableAssociationDefinition> determineAssociations(Class<?> entityClass) {
         Field[] fields = entityClass.getDeclaredFields();
         List<Field> collectionFields = Arrays.stream(fields)
                 .filter(field -> Collection.class.isAssignableFrom(field.getType()))
@@ -69,7 +69,7 @@ public class TableDefinition {
                         throw new IllegalArgumentException("collection fields must be a Collection");
                     }
                     Class<?> actualType = getGenericActualType(field);
-                    return new TableCollectionDefinition(actualType, field);
+                    return new TableAssociationDefinition(actualType, field);
                 })
                 .toList();
     }
@@ -177,7 +177,7 @@ public class TableDefinition {
         return associatedColumns;
     }
 
-    public List<TableCollectionDefinition> getCollectionColumns() {
-        return collectionColumns;
+    public List<TableAssociationDefinition> getAssociations() {
+        return associations;
     }
 }

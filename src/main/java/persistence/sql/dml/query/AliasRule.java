@@ -1,7 +1,5 @@
 package persistence.sql.dml.query;
 
-import persistence.sql.definition.TableDefinition;
-
 public class AliasRule {
     private static final String UNDERSCORE = "_";
     private static final Integer TABLE_PREFIX_LENGTH = 3;
@@ -11,19 +9,19 @@ public class AliasRule {
     private AliasRule() {
     }
 
-    public static String getTableAlias(TableDefinition tableDefinition) {
-        return TABLE_PREFIX + UNDERSCORE + tableDefinition.getTableName().substring(0, TABLE_PREFIX_LENGTH).toLowerCase();
+    public static String getTableAlias(String tableName) {
+        return TABLE_PREFIX + UNDERSCORE + tableName.substring(0, TABLE_PREFIX_LENGTH).toLowerCase();
     }
 
-    public static String getColumnAlias(TableDefinition tableDefinition, String columnName) {
-        return getTableAlias(tableDefinition) + UNDERSCORE + columnName;
+    public static String getColumnAlias(String tableName, String columnName) {
+        return getTableAlias(tableName) + UNDERSCORE + columnName;
     }
 
-    public static String getJoinTableAlias(TableDefinition tableDefinition) {
-        return JOIN_TABLE_PREFIX + UNDERSCORE + tableDefinition.getTableName().substring(0, TABLE_PREFIX_LENGTH).toLowerCase();
+    public static String getJoinTableAlias(String tableName) {
+        return JOIN_TABLE_PREFIX + UNDERSCORE + tableName.substring(0, TABLE_PREFIX_LENGTH).toLowerCase();
     }
 
-    public static String getJoinColumnAlias(TableDefinition tableDefinition, String columnName) {
-        return getJoinTableAlias(tableDefinition) + UNDERSCORE + columnName;
+    public static String getJoinColumnAlias(String tableName, String columnName) {
+        return getJoinTableAlias(tableName) + UNDERSCORE + columnName;
     }
 }

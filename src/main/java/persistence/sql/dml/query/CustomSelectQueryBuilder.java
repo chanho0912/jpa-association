@@ -38,19 +38,19 @@ public class CustomSelectQueryBuilder {
         query.append(columnsClause());
         query.append(" FROM ");
         query.append(tableDefinition.getTableName()).append(" ").append(
-                AliasRule.getTableAlias(tableDefinition)
+                AliasRule.getTableAlias(tableDefinition.getTableName())
         );
         if (joinTableDefinition != null) {
             query.append(" LEFT JOIN ");
             query.append(joinTableDefinition.getTableName()).append(" ").append(
-                    AliasRule.getJoinTableAlias(joinTableDefinition)
+                    AliasRule.getJoinTableAlias(joinTableDefinition.getTableName())
             );
             query.append(" ON ");
-            query.append(AliasRule.getJoinTableAlias(joinTableDefinition));
+            query.append(AliasRule.getJoinTableAlias(joinTableDefinition.getTableName()));
             query.append(".");
             query.append(joinTableDefinition.getTableId().getColumnName());
             query.append(" = ");
-            query.append(AliasRule.getTableAlias(tableDefinition));
+            query.append(AliasRule.getTableAlias(tableDefinition.getTableName()));
             query.append(".");
             query.append(tableDefinition.getTableId().getColumnName());
         }
@@ -62,15 +62,15 @@ public class CustomSelectQueryBuilder {
         final StringJoiner joiner = new StringJoiner(", ");
 
         columns.forEach(column -> {
-            String aliased = AliasRule.getTableAlias(tableDefinition) + "." + column;
-            aliased += " AS " + AliasRule.getColumnAlias(tableDefinition, column);
+            String aliased = AliasRule.getTableAlias(tableDefinition.getTableName()) + "." + column;
+            aliased += " AS " + AliasRule.getColumnAlias(tableDefinition.getTableName(), column);
 
             joiner.add(aliased);
         });
 
         joinTableColumns.forEach(column -> {
-            String aliased = AliasRule.getJoinTableAlias(joinTableDefinition) + "." + column;
-            aliased += " AS " + AliasRule.getJoinColumnAlias(joinTableDefinition, column);
+            String aliased = AliasRule.getJoinTableAlias(joinTableDefinition.getTableName()) + "." + column;
+            aliased += " AS " + AliasRule.getJoinColumnAlias(joinTableDefinition.getTableName(), column);
 
             joiner.add(aliased);
         });
