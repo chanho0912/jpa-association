@@ -70,7 +70,7 @@ public class TableId implements Queryable {
     }
 
     @Override
-    public boolean isJoinColumn() {
+    public boolean hasJoinColumn() {
         return false;
     }
 

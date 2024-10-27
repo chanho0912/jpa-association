@@ -16,7 +16,7 @@ public interface Queryable {
 
     String getDeclaredName();
 
-    boolean isJoinColumn();
+    boolean hasJoinColumn();
 
     JoinColumn getJoinColumn();
 

@@ -14,11 +14,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import persistence.sql.H2Dialect;
+import persistence.sql.Queryable;
 import persistence.sql.ddl.query.CreateTableQueryBuilder;
 import persistence.sql.ddl.query.DropQueryBuilder;
+import persistence.sql.definition.TableDefinition;
 import persistence.sql.dml.query.CustomSelectQueryBuilder;
 
 import java.sql.SQLException;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -59,9 +62,12 @@ public class EntityManagerTest {
         server = new H2();
         server.start();
 
-        String query = new CreateTableQueryBuilder(new H2Dialect(), EntityManagerTestEntityWithIdentityId.class).build();
-        String query2 = new CreateTableQueryBuilder(new H2Dialect(), Order.class).build();
-        String query3 = new CreateTableQueryBuilder(new H2Dialect(), OrderItem.class).build();
+        String query = new CreateTableQueryBuilder(new H2Dialect(), EntityManagerTestEntityWithIdentityId.class, List.of()).build();
+        String query2 = new CreateTableQueryBuilder(new H2Dialect(), Order.class, List.of()).build();
+
+        TableDefinition tableDefinition = new TableDefinition(Order.class);
+
+        String query3 = new CreateTableQueryBuilder(new H2Dialect(), OrderItem.class, (List<Queryable>) tableDefinition.getAssociatedColumns()).build();
 
         jdbcTemplate = new JdbcTemplate(server.getConnection());
         jdbcTemplate.execute(query);

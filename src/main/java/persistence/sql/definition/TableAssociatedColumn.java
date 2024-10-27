@@ -6,10 +6,10 @@ import persistence.sql.Queryable;
 
 import java.lang.reflect.Field;
 
-public class TableColumn implements Queryable {
+public class TableAssociatedColumn implements Queryable {
     private final ColumnDefinition columnDefinition;
 
-    public TableColumn(Field field) {
+    public TableAssociatedColumn(Field field) {
         this.columnDefinition = new ColumnDefinition(field);
     }
 
@@ -17,53 +17,41 @@ public class TableColumn implements Queryable {
     public void applyToCreateTableQuery(StringBuilder query, Dialect dialect) {
         final String type = dialect.translateType(columnDefinition);
         query.append(columnDefinition.getColumnName()).append(" ").append(type);
-
-        if (columnDefinition.isNotNullable()) {
-            query.append(" NOT NULL");
-        }
-
         query.append(", ");
     }
 
     @Override
     public boolean hasValue(Object entity) {
-        return columnDefinition.hasValue(entity);
+        return false;
     }
 
     @Override
     public String getValueWithQuoted(Object entity) {
-        final Object value = columnDefinition.getValue(entity);
-
-        if (value instanceof String) {
-            return "'" + value + "'";
-        }
-
-        return value.toString();
+        return "";
     }
 
     @Override
     public Object getValue(Object entity) {
-        return columnDefinition.getValue(entity);
+        return null;
     }
 
     @Override
     public String getColumnName() {
-        return columnDefinition.getColumnName();
+        return "";
     }
 
     @Override
     public String getDeclaredName() {
-        return columnDefinition.getDeclaredName();
+        return "";
     }
 
     @Override
     public boolean hasJoinColumn() {
-        return columnDefinition.isJoinColumn();
+        return false;
     }
 
     @Override
     public JoinColumn getJoinColumn() {
-        return columnDefinition.getJoinColumn();
+        return null;
     }
-
 }

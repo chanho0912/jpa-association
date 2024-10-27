@@ -65,7 +65,7 @@ public class Application {
     }
 
     private static void create(JdbcTemplate jdbcTemplate, Class<?> testClass) {
-        CreateTableQueryBuilder createQuery = new CreateTableQueryBuilder(new H2Dialect(), testClass);
+        CreateTableQueryBuilder createQuery = new CreateTableQueryBuilder(new H2Dialect(), testClass, List.of());
         jdbcTemplate.execute(createQuery.build());
     }
 

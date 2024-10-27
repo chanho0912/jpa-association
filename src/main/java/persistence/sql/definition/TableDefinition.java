@@ -2,6 +2,7 @@ package persistence.sql.definition;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import org.jetbrains.annotations.NotNull;
@@ -22,6 +23,7 @@ public class TableDefinition {
     private final Class<?> entityClass;
     private final List<TableColumn> columns;
     private final List<TableCollectionDefinition> collectionColumns;
+    private final List<TableAssociatedColumn> associatedColumns;
     private final TableId tableId;
 
     public TableDefinition(Class<?> entityClass) {
@@ -34,6 +36,20 @@ public class TableDefinition {
         this.collectionColumns = determineCollectionColumns(entityClass);
         this.columns = createTableColumns(fields);
         this.tableId = new TableId(fields);
+        this.associatedColumns = determineJoinColumns(tableId, fields);
+    }
+
+    private static List<TableAssociatedColumn> determineJoinColumns(TableId tableId, Field[] fields) {
+        final List<String> joinColumnNames = Arrays.stream(fields)
+                .filter(field -> field.isAnnotationPresent(JoinColumn.class))
+                .map(field -> field.getAnnotation(JoinColumn.class).name())
+                .toList();
+
+        return Arrays.stream(fields)
+                .filter(field -> tableId.getDeclaredName().equals(field.getName()) &&
+                        joinColumnNames.contains(tableId.getColumnName()))
+                .map(TableAssociatedColumn::new)
+                .toList();
     }
 
     @NotNull
@@ -155,6 +171,10 @@ public class TableDefinition {
         return withIdColumns().stream()
                 .filter(column -> column.hasValue(entity))
                 .toList();
+    }
+
+    public List<? extends Queryable> getAssociatedColumns() {
+        return associatedColumns;
     }
 
     public List<TableCollectionDefinition> getCollectionColumns() {
