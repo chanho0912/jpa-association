@@ -106,6 +106,11 @@ public class EntityManagerImpl implements EntityManager {
         return entity;
     }
 
+    @Override
+    public void clear() {
+        persistenceContext.clear();
+    }
+
     private void checkManagedEntity(Object entity, EntityEntry entityEntry) {
         if (entityEntry == null) {
             throw new IllegalStateException("Can not find entity in persistence context: "

@@ -14,17 +14,12 @@ public class SelectByIdQueryBuilder {
 
         tableDefinition.withIdColumns().forEach(column -> {
             String columnName = column.getColumnName();
-            String aliased = AliasRule.getTableAlias(tableDefinition.getTableName()) + "." + columnName;
-            aliased += " AS " + AliasRule.getColumnAlias(tableDefinition.getTableName(), columnName);
-
-            columns.add(aliased);
+            columns.add(tableDefinition.getTableName() + "." + columnName);
         });
 
 
         query.append(columns);
-        query.append(" FROM ").append(tableDefinition.getTableName())
-                .append(" ")
-                .append(AliasRule.getTableAlias(tableDefinition.getTableName()));
+        query.append(" FROM ").append(tableDefinition.getTableName());
 
         whereClause(query, tableDefinition, id);
         return query.toString();
@@ -32,7 +27,7 @@ public class SelectByIdQueryBuilder {
 
     private void whereClause(StringBuilder selectQuery, TableDefinition tableDefinition, Object id) {
         selectQuery.append(" WHERE ");
-        selectQuery.append(AliasRule.getTableAlias(tableDefinition.getTableName()))
+        selectQuery.append(tableDefinition.getTableName())
                 .append(".")
                 .append(tableDefinition.getTableId().getColumnName())
                 .append(" = ");

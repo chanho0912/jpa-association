@@ -58,7 +58,7 @@ public class TableDefinition {
         }
 
         return collectionFields.stream()
-                .map(field -> new TableAssociationDefinition(getGenericActualType(field), field))
+                .map(field -> new TableAssociationDefinition(getGenericActualType(field), field, ""))
                 .toList();
     }
 

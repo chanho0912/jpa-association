@@ -10,19 +10,21 @@ import java.util.List;
 
 public class TableAssociationDefinition {
     private final TableDefinition associatedTableDefinition;
-    private final JoinColumn joinColumn;
+    private final JoinColumnDefinition joinColumnDefinition;
     private final FetchType fetchType;
     private final Class<?> associatedEntityClass;
     private final String fieldName;
+    private final String JoinColumnName;
 
     public TableAssociationDefinition(Class<?> associatedEntityClass,
-                                      Field field) {
+                                      Field field, String joinColumnName) {
         this.associatedTableDefinition = new TableDefinition(associatedEntityClass);
-        this.joinColumn = getJoinColumn(associatedTableDefinition);
+        this.joinColumnDefinition = new JoinColumnDefinition(field);
         this.associatedEntityClass = associatedEntityClass;
         this.fieldName = field.getName();
         this.fetchType = field.isAnnotationPresent(OneToMany.class) ?
                 field.getAnnotation(OneToMany.class).fetch() : null;
+        this.JoinColumnName = joinColumnName;
     }
 
     private JoinColumn getJoinColumn(TableDefinition tableDefinition) {
@@ -56,5 +58,13 @@ public class TableAssociationDefinition {
 
     public String getTableName() {
         return associatedTableDefinition.getTableName();
+    }
+
+    public boolean isFetchEager() {
+        return fetchType == FetchType.EAGER;
+    }
+
+    public String getJoinColumnName() {
+        return joinColumnDefinition.getJoinColumnName();
     }
 }

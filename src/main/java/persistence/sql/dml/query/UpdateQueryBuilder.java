@@ -1,6 +1,7 @@
 package persistence.sql.dml.query;
 
 import persistence.sql.Queryable;
+import persistence.sql.definition.TableAssociationDefinition;
 import persistence.sql.definition.TableDefinition;
 
 import java.io.Serializable;
@@ -51,12 +52,16 @@ public class UpdateQueryBuilder {
     public String build(Object parent, Object child, Serializable parentId, Serializable childId) {
         final TableDefinition parentTableDefinition = new TableDefinition(parent.getClass());
         final TableDefinition childTableDefinition = new TableDefinition(child.getClass());
+        final TableAssociationDefinition childAssociationDefinition = parentTableDefinition.getAssociations().stream()
+                .filter(association -> association.getAssociatedEntityClass().equals(child.getClass()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Association not found"));
 
-        final StringBuilder query = new StringBuilder("UPDATE ").append(childTableDefinition.getTableName());
+        final StringBuilder query = new StringBuilder("UPDATE ").append(childAssociationDefinition.getTableName());
         columnClause(
                 query,
                 Map.of(
-                        parentTableDefinition.getTableId().getColumnName(),
+                        childAssociationDefinition.getJoinColumnName(),
                         parentId
                 )
         );

@@ -20,6 +20,9 @@ import persistence.sql.ddl.query.DropQueryBuilder;
 import persistence.sql.definition.TableDefinition;
 import persistence.sql.dml.query.CustomSelectQueryBuilder;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -250,16 +253,22 @@ public class EntityManagerTest {
         OrderItem orderItem1 = new OrderItem("product1", 1);
         OrderItem orderItem2 = new OrderItem("product2", 2);
 
-        em.persist(order);
-        em.persist(orderItem1);
-        em.persist(orderItem2);
 
         order.getOrderItems().add(orderItem1);
         order.getOrderItems().add(orderItem2);
 
-        em.merge(order);
-        Order persistedOrder = em.find(Order.class, 1L);
+        em.persist(order);
+        em.clear();
 
+//        final Connection connection = server.getConnection();
+//        ResultSet resultSet = connection.prepareStatement("SELECT orders.id, orders.orderNumber, order_items.id, order_items.product, order_items.quantity FROM orders LEFT JOIN order_items ON order_items.order_id = orders.id;")
+//                .executeQuery();
+//        printAllRowsAndColumns(resultSet);
+
+
+//        jdbcTemplate.execute("SELECT orders.id, orders.orderNumber, order_items.id, order_items.product, order_items.quantity FROM orders LEFT JOIN order_items ON order_items.order_id = orders.id;");
+        Order persistedOrder = em.find(Order.class, 1L);
+//
         assertAll(
                 () -> assertThat(persistedOrder.getId()).isEqualTo(1L),
                 () -> assertThat(persistedOrder.getOrderNumber()).isEqualTo("order_number"),
@@ -271,6 +280,21 @@ public class EntityManagerTest {
                 () -> assertThat(persistedOrder.getOrderItems().get(1).getProduct()).isEqualTo("product2"),
                 () -> assertThat(persistedOrder.getOrderItems().get(1).getQuantity()).isEqualTo(2)
         );
+    }
+
+    public static void printAllRowsAndColumns(ResultSet resultSet) throws SQLException {
+        ResultSetMetaData metaData = resultSet.getMetaData();
+        int columnCount = metaData.getColumnCount();
+
+        int rowIndex = 0;
+        while (resultSet.next()) {
+            System.out.println("Row " + (++rowIndex) + ":");
+            for (int i = 1; i <= columnCount; i++) {
+                String columnName = metaData.getColumnName(i);
+                Object value = resultSet.getObject(i);
+                System.out.printf("  %s: %s%n", columnName, value);
+            }
+        }
     }
 
 }

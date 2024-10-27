@@ -34,7 +34,8 @@ public class CreateTableQueryBuilder {
             List<JoinColumnDefinition> associatedJoinColumns = associatedTableDefinition.getJoinColumns();
             if (!associatedJoinColumns.isEmpty()) {
                 associatedJoinColumns
-                        .forEach(joinColumn -> query.append(joinColumn.getJoinColumnName() + " " + dialect.translateType(getColumnDefinition(associatedTableDefinition, joinColumn)) + ", "));
+                        // TODO 타입 변경
+                        .forEach(joinColumn -> query.append(joinColumn.getJoinColumnName() + " " + "BIGINT" + ", "));
 
             }
 
