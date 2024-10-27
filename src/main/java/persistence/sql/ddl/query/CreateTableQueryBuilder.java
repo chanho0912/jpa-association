@@ -4,11 +4,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import persistence.sql.Dialect;
 import persistence.sql.Queryable;
+import persistence.sql.definition.ColumnDefinition;
+import persistence.sql.definition.JoinColumnDefinition;
 import persistence.sql.definition.TableDefinition;
 import persistence.sql.definition.TableId;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class CreateTableQueryBuilder {
     private final StringBuilder query;
@@ -17,7 +19,7 @@ public class CreateTableQueryBuilder {
     public CreateTableQueryBuilder(
             Dialect dialect,
             Class<?> entityClass,
-            List<Queryable> associatedJoinColumns
+            Class<?> associatedClass
     ) {
         this.query = new StringBuilder();
 
@@ -27,12 +29,29 @@ public class CreateTableQueryBuilder {
         query.append(" (");
 
         tableDefinition.withIdColumns().forEach(column -> column.applyToCreateTableQuery(query, dialect));
-        associatedJoinColumns
-                .forEach(joinColumn -> joinColumn.applyToCreateTableQuery(query, dialect));
+        if (associatedClass != null) {
+            TableDefinition associatedTableDefinition = new TableDefinition(associatedClass);
+            List<JoinColumnDefinition> associatedJoinColumns = associatedTableDefinition.getJoinColumns();
+            if (!associatedJoinColumns.isEmpty()) {
+                associatedJoinColumns
+                        .forEach(joinColumn -> query.append(joinColumn.getJoinColumnName() + " " + dialect.translateType(getColumnDefinition(associatedTableDefinition, joinColumn)) + ", "));
+
+            }
+
+        }
 
         definePrimaryKey(tableDefinition.getTableId(), query);
 
         query.append(");");
+    }
+
+    private static ColumnDefinition getColumnDefinition(TableDefinition tableDefinition,
+                                                        JoinColumnDefinition joinColumn) {
+        if (Objects.equals(tableDefinition.getTableId().getColumnName(), joinColumn.getJoinColumnName())) {
+            return tableDefinition.getTableId().getColumnDefinition();
+        }
+
+        throw new IllegalArgumentException("Column not found");
     }
 
     public String build() {

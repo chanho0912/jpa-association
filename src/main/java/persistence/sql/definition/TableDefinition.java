@@ -23,7 +23,7 @@ public class TableDefinition {
     private final Class<?> entityClass;
     private final List<TableColumn> columns;
     private final List<TableAssociationDefinition> associations;
-    private final List<TableAssociatedColumn> associatedColumns;
+    private final List<JoinColumnDefinition> joinColumns;
     private final TableId tableId;
 
     public TableDefinition(Class<?> entityClass) {
@@ -36,19 +36,13 @@ public class TableDefinition {
         this.associations = determineAssociations(entityClass);
         this.columns = createTableColumns(fields);
         this.tableId = new TableId(fields);
-        this.associatedColumns = determineJoinColumns(tableId, fields);
+        this.joinColumns = createJoinColumns(fields);
     }
 
-    private static List<TableAssociatedColumn> determineJoinColumns(TableId tableId, Field[] fields) {
-        final List<String> joinColumnNames = Arrays.stream(fields)
-                .filter(field -> field.isAnnotationPresent(JoinColumn.class))
-                .map(field -> field.getAnnotation(JoinColumn.class).name())
-                .toList();
-
+    private static List<JoinColumnDefinition> createJoinColumns(Field[] fields) {
         return Arrays.stream(fields)
-                .filter(field -> tableId.getDeclaredName().equals(field.getName()) &&
-                        joinColumnNames.contains(tableId.getColumnName()))
-                .map(TableAssociatedColumn::new)
+                .filter(field -> field.isAnnotationPresent(JoinColumn.class))
+                .map(JoinColumnDefinition::new)
                 .toList();
     }
 
@@ -64,13 +58,7 @@ public class TableDefinition {
         }
 
         return collectionFields.stream()
-                .map(field -> {
-                    if (!Collection.class.isAssignableFrom(field.getType())) {
-                        throw new IllegalArgumentException("collection fields must be a Collection");
-                    }
-                    Class<?> actualType = getGenericActualType(field);
-                    return new TableAssociationDefinition(actualType, field);
-                })
+                .map(field -> new TableAssociationDefinition(getGenericActualType(field), field))
                 .toList();
     }
 
@@ -173,11 +161,11 @@ public class TableDefinition {
                 .toList();
     }
 
-    public List<? extends Queryable> getAssociatedColumns() {
-        return associatedColumns;
-    }
-
     public List<TableAssociationDefinition> getAssociations() {
         return associations;
+    }
+
+    public List<JoinColumnDefinition> getJoinColumns() {
+        return joinColumns;
     }
 }

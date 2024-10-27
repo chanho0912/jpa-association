@@ -67,7 +67,7 @@ public class EntityManagerTest {
 
         TableDefinition tableDefinition = new TableDefinition(Order.class);
 
-        String query3 = new CreateTableQueryBuilder(new H2Dialect(), OrderItem.class, (List<Queryable>) tableDefinition.getAssociatedColumns()).build();
+        String query3 = new CreateTableQueryBuilder(new H2Dialect(), OrderItem.class, (List<Queryable>) tableDefinition.getAssociatedColumns("order_items")).build();
 
         jdbcTemplate = new JdbcTemplate(server.getConnection());
         jdbcTemplate.execute(query);

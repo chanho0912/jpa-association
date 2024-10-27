@@ -96,7 +96,6 @@ public class EntityManagerImpl implements EntityManager {
         final EntityEntry entityEntry = persistenceContext.getEntityEntry(entityKey);
         checkManagedEntity(entity, entityEntry);
 
-
         final EntitySnapshot entitySnapshot = persistenceContext.getDatabaseSnapshot(entityKey);
         if (entitySnapshot.hasDirtyColumns(entity)) {
             entityPersister.update(entity);

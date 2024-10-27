@@ -11,6 +11,7 @@ import java.util.Objects;
 public class EntitySnapshot {
     private final TableDefinition tableDefinition;
     private final Map<String, Object> columnSnapshots = new HashMap<>();
+    private final Map<String, Object> associationSnapshots = new HashMap<>();
 
     public EntitySnapshot(Object entity) {
         tableDefinition = new TableDefinition(entity.getClass());
@@ -18,6 +19,10 @@ public class EntitySnapshot {
         for (Queryable column : columns) {
             columnSnapshots.put(column.getColumnName(), getNullableValue(entity, column));
         }
+        tableDefinition.getJoinColumns().forEach(joinColumn -> {
+            final String joinColumnName = joinColumn.getJoinColumnName();
+            associationSnapshots.put(joinColumnName, null);
+        });
     }
 
     private static Object getNullableValue(Object entity, Queryable column) {

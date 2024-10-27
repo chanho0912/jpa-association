@@ -11,18 +11,16 @@ import java.util.List;
 public class TableAssociationDefinition {
     private final TableDefinition associatedTableDefinition;
     private final JoinColumn joinColumn;
-    private final boolean isOneToMany;
     private final FetchType fetchType;
-    private final Class<?> entityClass;
+    private final Class<?> associatedEntityClass;
     private final String fieldName;
 
-    public TableAssociationDefinition(Class<?> entityClass,
+    public TableAssociationDefinition(Class<?> associatedEntityClass,
                                       Field field) {
-        this.associatedTableDefinition = new TableDefinition(entityClass);
+        this.associatedTableDefinition = new TableDefinition(associatedEntityClass);
         this.joinColumn = getJoinColumn(associatedTableDefinition);
-        this.entityClass = entityClass;
+        this.associatedEntityClass = associatedEntityClass;
         this.fieldName = field.getName();
-        this.isOneToMany = field.isAnnotationPresent(OneToMany.class);
         this.fetchType = field.isAnnotationPresent(OneToMany.class) ?
                 field.getAnnotation(OneToMany.class).fetch() : null;
     }
@@ -48,11 +46,15 @@ public class TableAssociationDefinition {
         return associatedTableDefinition;
     }
 
-    public Class<?> getEntityClass() {
-        return entityClass;
+    public Class<?> getAssociatedEntityClass() {
+        return associatedEntityClass;
     }
 
     public String getFieldName() {
         return fieldName;
+    }
+
+    public String getTableName() {
+        return associatedTableDefinition.getTableName();
     }
 }

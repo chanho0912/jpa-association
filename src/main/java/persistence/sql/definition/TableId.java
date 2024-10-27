@@ -111,4 +111,8 @@ public class TableId implements Queryable {
     public Object getValue(Object entity) {
         return columnDefinition.getValue(entity);
     }
+
+    public ColumnDefinition getColumnDefinition() {
+        return columnDefinition;
+    }
 }

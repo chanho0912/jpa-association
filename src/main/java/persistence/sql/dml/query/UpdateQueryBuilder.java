@@ -47,4 +47,24 @@ public class UpdateQueryBuilder {
 
         return query.toString();
     }
+
+    public String build(Object parent, Object child, Serializable parentId, Serializable childId) {
+        final TableDefinition parentTableDefinition = new TableDefinition(parent.getClass());
+        final TableDefinition childTableDefinition = new TableDefinition(child.getClass());
+
+        final StringBuilder query = new StringBuilder("UPDATE ").append(childTableDefinition.getTableName());
+        columnClause(
+                query,
+                Map.of(
+                        parentTableDefinition.getTableId().getColumnName(),
+                        parentId
+                )
+        );
+
+        query.append(" WHERE ");
+        query.append(childTableDefinition.getTableId().getColumnName()).append(" = ");
+        query.append(childId);
+        query.append(";");
+        return query.toString();
+    }
 }

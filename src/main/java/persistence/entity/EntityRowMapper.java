@@ -32,9 +32,9 @@ public class EntityRowMapper<T> implements RowMapper<T> {
             }
 
             for (TableAssociationDefinition association : tableDefinition.getAssociations()) {
-                final Object collectionInstance = association.getEntityClass().getDeclaredConstructor().newInstance();
+                final Object collectionInstance = association.getAssociatedEntityClass().getDeclaredConstructor().newInstance();
                 for (Queryable field : association.getAssociatedTableDefinition().withIdColumns()) {
-                    setField(resultSet, association.getEntityClass(), field, collectionInstance,
+                    setField(resultSet, association.getAssociatedEntityClass(), field, collectionInstance,
                             (columnName) -> AliasRule.getJoinColumnAlias(association.getAssociatedTableDefinition().getTableName(), columnName));
                 }
 
