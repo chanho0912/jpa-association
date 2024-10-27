@@ -60,7 +60,7 @@ class EntityPersisterTest {
         server.start();
 
         jdbcTemplate = new JdbcTemplate(server.getConnection());
-        String query2 = new CreateTableQueryBuilder(new H2Dialect(), QueryTestEntityWithIdentityId.class, List.of()).build();
+        String query2 = new CreateTableQueryBuilder(new H2Dialect(), QueryTestEntityWithIdentityId.class, null).build();
         jdbcTemplate.execute(query2);
     }
 

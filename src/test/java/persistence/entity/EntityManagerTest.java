@@ -62,12 +62,12 @@ public class EntityManagerTest {
         server = new H2();
         server.start();
 
-        String query = new CreateTableQueryBuilder(new H2Dialect(), EntityManagerTestEntityWithIdentityId.class, List.of()).build();
-        String query2 = new CreateTableQueryBuilder(new H2Dialect(), Order.class, List.of()).build();
+        String query = new CreateTableQueryBuilder(new H2Dialect(), EntityManagerTestEntityWithIdentityId.class, null).build();
+        String query2 = new CreateTableQueryBuilder(new H2Dialect(), Order.class, null).build();
 
         TableDefinition tableDefinition = new TableDefinition(Order.class);
 
-        String query3 = new CreateTableQueryBuilder(new H2Dialect(), OrderItem.class, (List<Queryable>) tableDefinition.getAssociatedColumns("order_items")).build();
+        String query3 = new CreateTableQueryBuilder(new H2Dialect(), OrderItem.class, Order.class).build();
 
         jdbcTemplate = new JdbcTemplate(server.getConnection());
         jdbcTemplate.execute(query);
@@ -182,18 +182,47 @@ public class EntityManagerTest {
 
     @Test
     @DisplayName("Entity Manager Select without Join")
-    void testSelectWithJoin() throws Exception {
+    void testSelectWithoutJoin() throws Exception {
         EntityManager entityManager = new EntityManagerImpl(new JdbcTemplate(server.getConnection()), new PersistenceContextImpl());
         Order order = new Order("order_number");
         entityManager.persist(order);
 
-        String customSelectQuery = new CustomSelectQueryBuilder(Order.class).join(OrderItem.class).build();
-        Order persistedOrder = jdbcTemplate.queryForObject(customSelectQuery, new EntityRowMapper<>(Order.class));
-//        Order persistedOrder = entityManager.find(Order.class, 1L);
+        Order persistedOrder = entityManager.find(Order.class, 1L);
         assertAll(
                 () -> assertThat(persistedOrder.getId()).isEqualTo(1L),
                 () -> assertThat(persistedOrder.getOrderNumber()).isEqualTo("order_number"),
                 () -> assertThat(persistedOrder.getOrderItems()).isEmpty()
+        );
+    }
+
+    @Test
+    @DisplayName("Entity Manager Select with Join")
+    void testSelectWithJoin() throws Exception {
+        EntityManager entityManager = new EntityManagerImpl(new JdbcTemplate(server.getConnection()), new PersistenceContextImpl());
+        Order order = new Order("order_number");
+        OrderItem orderItem1 = new OrderItem("product1", 1);
+        OrderItem orderItem2 = new OrderItem("product2", 2);
+
+        entityManager.persist(order);
+        entityManager.persist(orderItem1);
+        entityManager.persist(orderItem2);
+
+        order.getOrderItems().add(orderItem1);
+        order.getOrderItems().add(orderItem2);
+
+        entityManager.merge(order);
+        Order persistedOrder = entityManager.find(Order.class, 1L);
+
+        assertAll(
+                () -> assertThat(persistedOrder.getId()).isEqualTo(1L),
+                () -> assertThat(persistedOrder.getOrderNumber()).isEqualTo("order_number"),
+                () -> assertThat(persistedOrder.getOrderItems()).hasSize(2),
+                () -> assertThat(persistedOrder.getOrderItems().get(0).getId()).isEqualTo(1L),
+                () -> assertThat(persistedOrder.getOrderItems().get(0).getProduct()).isEqualTo("product1"),
+                () -> assertThat(persistedOrder.getOrderItems().get(0).getQuantity()).isEqualTo(1),
+                () -> assertThat(persistedOrder.getOrderItems().get(1).getId()).isEqualTo(2L),
+                () -> assertThat(persistedOrder.getOrderItems().get(1).getProduct()).isEqualTo("product2"),
+                () -> assertThat(persistedOrder.getOrderItems().get(1).getQuantity()).isEqualTo(2)
         );
     }
 

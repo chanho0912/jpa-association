@@ -66,8 +66,8 @@ class EntityLoaderTest {
         Dialect dialect = new H2Dialect();
         JdbcTemplate jdbcTemplate = new JdbcTemplate(server.getConnection());
 
-        String createTestEntity1TableQuery = new CreateTableQueryBuilder(dialect, EntityLoaderTestEntity1.class, List.of()).build();
-        String createTestEntity2TableQuery = new CreateTableQueryBuilder(dialect, EntityLoaderTestEntity2.class, List.of()).build();
+        String createTestEntity1TableQuery = new CreateTableQueryBuilder(dialect, EntityLoaderTestEntity1.class, null).build();
+        String createTestEntity2TableQuery = new CreateTableQueryBuilder(dialect, EntityLoaderTestEntity2.class, null).build();
 
         jdbcTemplate.execute(createTestEntity1TableQuery);
         jdbcTemplate.execute(createTestEntity2TableQuery);

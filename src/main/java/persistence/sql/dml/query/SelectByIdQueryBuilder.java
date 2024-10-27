@@ -12,10 +12,19 @@ public class SelectByIdQueryBuilder {
         query.append("SELECT ");
         StringJoiner columns = new StringJoiner(", ");
 
-        tableDefinition.withIdColumns().forEach(column -> columns.add(column.getColumnName()));
+        tableDefinition.withIdColumns().forEach(column -> {
+            String columnName = column.getColumnName();
+            String aliased = AliasRule.getTableAlias(tableDefinition.getTableName()) + "." + columnName;
+            aliased += " AS " + AliasRule.getColumnAlias(tableDefinition.getTableName(), columnName);
+
+            columns.add(aliased);
+        });
+
 
         query.append(columns);
-        query.append(" FROM ").append(tableDefinition.getTableName());
+        query.append(" FROM ").append(tableDefinition.getTableName())
+                .append(" ")
+                .append(AliasRule.getTableAlias(tableDefinition.getTableName()));
 
         whereClause(query, tableDefinition, id);
         return query.toString();
@@ -23,7 +32,10 @@ public class SelectByIdQueryBuilder {
 
     private void whereClause(StringBuilder selectQuery, TableDefinition tableDefinition, Object id) {
         selectQuery.append(" WHERE ");
-        selectQuery.append(tableDefinition.getTableId().getColumnName()).append(" = ");
+        selectQuery.append(AliasRule.getTableAlias(tableDefinition.getTableName()))
+                .append(".")
+                .append(tableDefinition.getTableId().getColumnName())
+                .append(" = ");
 
         if (id instanceof String) {
             selectQuery.append("'").append(id).append("';");
