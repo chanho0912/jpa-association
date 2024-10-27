@@ -32,7 +32,7 @@ public class UpdateQueryBuilder {
                         .collect(
                                 Collectors.toMap(
                                         Queryable::getColumnName,
-                                        column -> column.hasValue(entity) ? column.getValueAsString(entity) : "null",
+                                        column -> column.hasValue(entity) ? column.getValueWithQuoted(entity) : "null",
                                         (value1, value2) -> value2,
                                         LinkedHashMap::new
                                 )

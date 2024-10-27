@@ -53,8 +53,7 @@ public class TableDefinition {
                         throw new IllegalArgumentException("collection fields must be a Collection");
                     }
                     Class<?> actualType = getGenericActualType(field);
-                    TableDefinition tableDefinition = new TableDefinition(actualType);
-                    return new TableCollectionDefinition(tableDefinition, actualType, field.getName());
+                    return new TableCollectionDefinition(actualType, field);
                 })
                 .toList();
     }

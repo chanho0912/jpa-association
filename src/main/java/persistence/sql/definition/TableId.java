@@ -3,6 +3,7 @@ package persistence.sql.definition;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import persistence.sql.Dialect;
 import persistence.sql.Queryable;
 import persistence.sql.ddl.query.AutoKeyGenerationStrategy;
@@ -69,6 +70,16 @@ public class TableId implements Queryable {
     }
 
     @Override
+    public boolean isJoinColumn() {
+        return false;
+    }
+
+    @Override
+    public JoinColumn getJoinColumn() {
+        return null;
+    }
+
+    @Override
     public void applyToCreateTableQuery(StringBuilder query, Dialect dialect) {
         final String type = dialect.translateType(columnDefinition);
         query.append(columnDefinition.getColumnName()).append(" ").append(type);
@@ -82,11 +93,11 @@ public class TableId implements Queryable {
 
     @Override
     public boolean hasValue(Object entity) {
-        return columnDefinition.hasValue(entity) && !Objects.equals(getValueAsString(entity), "0");
+        return columnDefinition.hasValue(entity) && !Objects.equals(getValueWithQuoted(entity), "0");
     }
 
     @Override
-    public String getValueAsString(Object entity) {
+    public String getValueWithQuoted(Object entity) {
         final Object value = columnDefinition.getValue(entity);
 
         if (value instanceof String) {

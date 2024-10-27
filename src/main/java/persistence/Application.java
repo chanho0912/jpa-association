@@ -10,7 +10,7 @@ import persistence.entity.EntityManagerImpl;
 import persistence.entity.EntityRowMapper;
 import persistence.entity.PersistenceContextImpl;
 import persistence.sql.H2Dialect;
-import persistence.sql.Person;
+import domain.Person;
 import persistence.sql.ddl.query.CreateTableQueryBuilder;
 import persistence.sql.ddl.query.DropQueryBuilder;
 import persistence.sql.dml.query.SelectAllQueryBuilder;

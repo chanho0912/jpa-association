@@ -1,6 +1,7 @@
 package persistence.sql.definition;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.JoinColumn;
 import org.jetbrains.annotations.NotNull;
 import persistence.sql.SqlType;
 
@@ -16,6 +17,8 @@ public class ColumnDefinition {
     private final String declaredName;
     private final boolean nullable;
     private final int length;
+    private final boolean isJoinColumn;
+    private final JoinColumn joinColumn;
 
     public ColumnDefinition(Field field) {
         this.declaredName = field.getName();
@@ -23,6 +26,15 @@ public class ColumnDefinition {
         this.sqlType = determineColumnType(field);
         this.nullable = determineColumnNullable(field);
         this.length = determineColumnLength(field);
+
+        final JoinColumn joinColumn = parseJoinColumn(field);
+        if (joinColumn != null) {
+            this.isJoinColumn = true;
+            this.joinColumn = joinColumn;
+        } else {
+            this.isJoinColumn = false;
+            this.joinColumn = null;
+        }
     }
 
     private static String determineColumnName(Field field) {
@@ -59,6 +71,13 @@ public class ColumnDefinition {
         return field.getAnnotation(Column.class).nullable();
     }
 
+    private JoinColumn parseJoinColumn(Field field) {
+        if (field.isAnnotationPresent(JoinColumn.class)) {
+            return field.getAnnotation(JoinColumn.class);
+        }
+        return null;
+    }
+
     public String getColumnName() {
         return columnName;
     }
@@ -81,6 +100,14 @@ public class ColumnDefinition {
 
     public String getDeclaredName() {
         return declaredName;
+    }
+
+    public boolean isJoinColumn() {
+        return isJoinColumn;
+    }
+
+    public JoinColumn getJoinColumn() {
+        return joinColumn;
     }
 
     public boolean hasValue(Object entity) {

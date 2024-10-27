@@ -37,3 +37,6 @@ OrderItem orderItem2 = new OrderItem();
 order.getOrderItems().add(orderItem1);
 order.getOrderItems().add(orderItem2);
 ```
+- [ ] OrderItem 테이블을 생성할 때 order_id가 추가되어서 생성되어야 한다.
+- [ ] Order가 없는 경우 OrderItem에 order_id가 null로 저장된다.
+- [ ] Order가 있는 경우 OrderItem에 null로 저장된 후, order_id를 update한다.

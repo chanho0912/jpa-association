@@ -210,17 +210,20 @@ public class EntityManagerTest {
     @Test
     @DisplayName("Insert 시 연관 테이블까지 Insert 되어야 한다.")
     void testInsertWithAssociationTable() throws SQLException {
-        EntityManager entityManager = new EntityManagerImpl(new JdbcTemplate(server.getConnection()), new PersistenceContextImpl());
+        EntityManager em = new EntityManagerImpl(new JdbcTemplate(server.getConnection()), new PersistenceContextImpl());
         Order order = new Order("order_number");
         OrderItem orderItem1 = new OrderItem("product1", 1);
         OrderItem orderItem2 = new OrderItem("product2", 2);
 
+        em.persist(order);
+        em.persist(orderItem1);
+        em.persist(orderItem2);
+
         order.getOrderItems().add(orderItem1);
         order.getOrderItems().add(orderItem2);
 
-        entityManager.persist(order);
-
-        Order persistedOrder = entityManager.find(Order.class, 1L);
+        em.merge(order);
+        Order persistedOrder = em.find(Order.class, 1L);
 
         assertAll(
                 () -> assertThat(persistedOrder.getId()).isEqualTo(1L),

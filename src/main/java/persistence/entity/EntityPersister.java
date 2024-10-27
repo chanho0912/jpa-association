@@ -45,6 +45,7 @@ public class EntityPersister {
 
     public Object insert(Object entity) {
         final String query = insertQueryBuilder.build(entity);
+        logger.info("Generated Insert query: {}", query);
         final Serializable id = jdbcTemplate.insertAndReturnKey(query);
         bindId(id, entity);
         return entity;
@@ -76,6 +77,7 @@ public class EntityPersister {
 
     public void update(Object entity) {
         final String query = updateQueryBuilder.build(entity);
+        logger.info("Generated Update query: {}", query);
         jdbcTemplate.execute(query);
     }
 
