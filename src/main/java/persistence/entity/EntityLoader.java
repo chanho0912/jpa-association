@@ -15,8 +15,8 @@ public class EntityLoader {
     }
 
     public <T> T loadEntity(Class<T> entityClass, EntityKey entityKey) {
-        final SelectQueryBuilder queryBuilder = new SelectQueryBuilder(entityKey.getEntityClass());
-        final TableDefinition tableDefinition = new TableDefinition(entityKey.getEntityClass());
+        final SelectQueryBuilder queryBuilder = new SelectQueryBuilder(entityKey.entityClass());
+        final TableDefinition tableDefinition = new TableDefinition(entityKey.entityClass());
 
         tableDefinition.getAssociations().forEach(association -> {
             if (association.isFetchEager()) {
@@ -28,7 +28,7 @@ public class EntityLoader {
         logger.info("Executing custom select query: {}", query);
 
         final Object queried = jdbcTemplate.queryForObject(query,
-                new EntityRowMapper<>(entityKey.getEntityClass())
+                new EntityRowMapper<>(entityKey.entityClass())
         );
 
         return entityClass.cast(queried);
