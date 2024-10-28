@@ -1,8 +1,9 @@
 package persistence.entity;
 
+import common.AliasRule;
+import common.ReflectionFieldAccessUtils;
 import jdbc.RowMapper;
 import org.jetbrains.annotations.NotNull;
-import persistence.sql.AliasUtils;
 import persistence.sql.Queryable;
 import persistence.sql.definition.TableAssociationDefinition;
 import persistence.sql.definition.TableDefinition;
@@ -14,7 +15,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 
 public class EntityRowMapper<T> implements RowMapper<T> {
     private final Class<T> clazz;
@@ -28,7 +28,7 @@ public class EntityRowMapper<T> implements RowMapper<T> {
     @Override
     public T mapRow(ResultSet resultSet) throws SQLException {
         try {
-            final T instance = newInstance(clazz);
+            final T instance = clazz.getDeclaredConstructor().newInstance();
 
             for (Queryable field : tableDefinition.withIdColumns()) {
                 setField(resultSet, clazz, field, instance);
@@ -59,30 +59,15 @@ public class EntityRowMapper<T> implements RowMapper<T> {
         }
     }
 
-    @NotNull
-    private T newInstance(
-            Class<T> clazz
-    ) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        return clazz.getDeclaredConstructor().newInstance();
-    }
-
     private Collection<Object> getCollectionField(
             T instance, TableAssociationDefinition collection
     ) throws NoSuchFieldException, IllegalAccessException {
         final Field collectionField = clazz.getDeclaredField(collection.getFieldName());
-        final boolean wasAccessible = collectionField.canAccess(instance);
-        if (!wasAccessible) {
-            collectionField.setAccessible(true);
-        }
 
-        Collection<Object> entityCollection = (Collection<Object>) collectionField.get(instance);
+        Collection<Object> entityCollection = (Collection<Object>) ReflectionFieldAccessUtils.accessAndGet(instance, collectionField);
         if (entityCollection == null) {
             entityCollection = new ArrayList<>();
             collectionField.set(instance, entityCollection);
-        }
-
-        if (!wasAccessible) {
-            collectionField.setAccessible(false);
         }
 
         return entityCollection;
@@ -93,25 +78,9 @@ public class EntityRowMapper<T> implements RowMapper<T> {
         final String databaseColumnName = field.getColumnName();
         final Field objectDeclaredField = entityClass.getDeclaredField(field.getDeclaredName());
         final String tableName = new TableDefinition(entityClass).getTableName();
+        final Object bindValue = resultSet.getObject(AliasRule.buildWith(tableName, databaseColumnName));
 
-        final boolean wasAccessible = objectDeclaredField.canAccess(instance);
-        if (!wasAccessible) {
-            objectDeclaredField.setAccessible(true);
-        }
-
-        objectDeclaredField.set(instance, resultSet.getObject(AliasUtils.alias(tableName, databaseColumnName)));
-
-        if (!wasAccessible) {
-            objectDeclaredField.setAccessible(false);
-        }
+        ReflectionFieldAccessUtils.accessAndSet(instance, objectDeclaredField, bindValue);
     }
 
-    private boolean isRowEmpty(ResultSet resultSet, Collection<String> columns) throws SQLException {
-        for (String column : columns) {
-            if (resultSet.getObject(column) != null) {
-                return false;
-            }
-        }
-        return true;
-    }
 }

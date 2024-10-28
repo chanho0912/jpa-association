@@ -4,7 +4,7 @@ import jdbc.JdbcTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import persistence.sql.definition.TableDefinition;
-import persistence.sql.dml.query.CustomSelectQueryBuilder;
+import persistence.sql.dml.query.SelectQueryBuilder;
 
 public class EntityLoader {
     private final JdbcTemplate jdbcTemplate;
@@ -15,8 +15,9 @@ public class EntityLoader {
     }
 
     public <T> T loadEntity(Class<T> entityClass, EntityKey entityKey) {
-        final CustomSelectQueryBuilder queryBuilder = new CustomSelectQueryBuilder(entityKey.getEntityClass());
+        final SelectQueryBuilder queryBuilder = new SelectQueryBuilder(entityKey.getEntityClass());
         final TableDefinition tableDefinition = new TableDefinition(entityKey.getEntityClass());
+
         tableDefinition.getAssociations().forEach(association -> {
             if (association.isFetchEager()) {
                 queryBuilder.join(association);

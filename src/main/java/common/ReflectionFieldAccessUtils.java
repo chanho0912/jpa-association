@@ -22,4 +22,21 @@ public class ReflectionFieldAccessUtils {
             }
         }
     }
+
+    public static void accessAndSet(Object target, Field field, Object value) {
+        final boolean wasAccessible = field.canAccess(target);
+        try {
+            if (!wasAccessible) {
+                field.setAccessible(true);
+            }
+
+            field.set(target, value);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException("Cannot access field value", e);
+        } finally {
+            if (!wasAccessible) {
+                field.setAccessible(false);
+            }
+        }
+    }
 }

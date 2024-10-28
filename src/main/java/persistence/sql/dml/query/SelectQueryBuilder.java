@@ -1,6 +1,6 @@
 package persistence.sql.dml.query;
 
-import persistence.sql.AliasUtils;
+import common.AliasRule;
 import persistence.sql.definition.TableAssociationDefinition;
 import persistence.sql.definition.TableDefinition;
 
@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
-public class CustomSelectQueryBuilder {
+public class SelectQueryBuilder {
 
     private final TableDefinition tableDefinition;
     private final List<String> columns = new ArrayList<>();
@@ -16,7 +16,7 @@ public class CustomSelectQueryBuilder {
     private TableAssociationDefinition joinTableDefinition;
     private final List<String> joinTableColumns = new ArrayList<>();
 
-    public CustomSelectQueryBuilder(Class<?> entityClass) {
+    public SelectQueryBuilder(Class<?> entityClass) {
         final TableDefinition tableDefinition = new TableDefinition(entityClass);
         this.tableDefinition = tableDefinition;
         tableDefinition.withIdColumns().forEach(column -> {
@@ -25,7 +25,7 @@ public class CustomSelectQueryBuilder {
         );
     }
 
-    public CustomSelectQueryBuilder join(TableAssociationDefinition tableAssociationDefinition) {
+    public SelectQueryBuilder join(TableAssociationDefinition tableAssociationDefinition) {
         final TableDefinition joinTableDefinition = tableAssociationDefinition.getAssociatedTableDefinition();
         this.joinTableDefinition = tableAssociationDefinition;
         joinTableDefinition.withIdColumns().forEach(column -> {
@@ -60,12 +60,12 @@ public class CustomSelectQueryBuilder {
         final StringJoiner joiner = new StringJoiner(", ");
 
         columns.forEach(column -> {
-            final String aliased = AliasUtils.alias(tableDefinition.getTableName(), column);
+            final String aliased = AliasRule.buildWith(tableDefinition.getTableName(), column);
             joiner.add(tableDefinition.getTableName() + "." + column + " AS " + aliased);
         });
 
         joinTableColumns.forEach(column -> {
-            final String aliased = AliasUtils.alias(joinTableDefinition.getTableName(), column);
+            final String aliased = AliasRule.buildWith(joinTableDefinition.getTableName(), column);
             joiner.add(joinTableDefinition.getTableName() + "." + column + " AS " + aliased);
         });
 

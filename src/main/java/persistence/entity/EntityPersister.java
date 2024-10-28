@@ -1,13 +1,13 @@
 package persistence.entity;
 
+import common.ReflectionFieldAccessUtils;
 import jdbc.JdbcTemplate;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import persistence.sql.definition.TableAssociationDefinition;
 import persistence.sql.definition.TableDefinition;
 import persistence.sql.definition.TableId;
-import persistence.sql.dml.query.DeleteByIdQueryBuilder;
+import persistence.sql.dml.query.DeleteQueryBuilder;
 import persistence.sql.dml.query.InsertQueryBuilder;
 import persistence.sql.dml.query.UpdateQueryBuilder;
 
@@ -25,7 +25,7 @@ public class EntityPersister {
     private static final Long DEFAULT_ID_VALUE = 0L;
     private static final UpdateQueryBuilder updateQueryBuilder = new UpdateQueryBuilder();
     private static final InsertQueryBuilder insertQueryBuilder = new InsertQueryBuilder();
-    private static final DeleteByIdQueryBuilder deleteByIdQueryBuilder = new DeleteByIdQueryBuilder();
+    private static final DeleteQueryBuilder deleteQueryBuilder = new DeleteQueryBuilder();
 
     private final Logger logger = LoggerFactory.getLogger(EntityPersister.class);
     private final Map<Class<?>, TableDefinition> tableDefinitions;
@@ -53,10 +53,12 @@ public class EntityPersister {
     public Object insert(Object entity) {
         final TableDefinition tableDefinition = getTableDefinition(entity);
         final Object persistedParent = doInsert(entity);
-        if (!tableDefinition.getAssociations().isEmpty()) {
+
+        if (tableDefinition.hasAssociations()) {
             final List<Object> persistedChildren = insertCollections(entity);
             persistedChildren.forEach(child -> updateAssociatedColumns(persistedParent, child));
         }
+
         return persistedParent;
     }
 
@@ -70,63 +72,57 @@ public class EntityPersister {
     }
 
     private List<Object> insertCollections(Object parentEntity) {
-        final List<Object> insertedEntities = new ArrayList<>();
-        final TableDefinition parentTableDefinition = getTableDefinition(parentEntity);
+        final List<Object> persistedEntities = new ArrayList<>();
+        final List<TableAssociationDefinition> associations = getTableDefinition(parentEntity).getAssociations();
 
-        parentTableDefinition.getAssociations().forEach(association -> {
-            final Class<?> associatedEntityClass = association.getAssociatedEntityClass();
-
+        associations.forEach(association -> {
             for (Field declaredField : parentEntity.getClass().getDeclaredFields()) {
-                if (Collection.class.isAssignableFrom(declaredField.getType())) {
-                    declaredField.setAccessible(true);
+                if (!Collection.class.isAssignableFrom(declaredField.getType())) {
+                    continue;
+                }
 
-                    Type genericType = declaredField.getGenericType();
-                    if (genericType instanceof ParameterizedType parameterizedType) {
-                        Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                Type genericType = getParameterizedType(declaredField);
+                if (genericType == null) {
+                    continue;
+                }
 
-                        if (actualTypeArguments.length > 0 && actualTypeArguments[0] == associatedEntityClass) {
-                            final Object collection = getCollectionField(parentEntity, association);
-                            if (collection instanceof Iterable<?> iterable) {
-                                iterable.forEach(entity -> {
-                                    Object result = insert(entity);
-                                    insertedEntities.add(result);
-                                });
-                            }
-                        }
-                    }
+                final Object collection = getDeclaredAssociationField(parentEntity, association);
+                if (collection instanceof Iterable<?> iterable) {
+                    iterable.forEach(entity -> {
+                        Object result = insert(entity);
+                        persistedEntities.add(result);
+                    });
                 }
             }
         });
 
-        return insertedEntities;
+        return persistedEntities;
     }
 
-    private Object getCollectionField(Object parentEntity, TableAssociationDefinition association) {
+    private Type getParameterizedType(Field field) {
+        Type genericType = field.getGenericType();
+        if (genericType instanceof ParameterizedType parameterizedType) {
+            return parameterizedType.getActualTypeArguments()[0];
+        }
+        return null;
+    }
+
+    private Object getDeclaredAssociationField(Object parentEntity, TableAssociationDefinition association) {
         try {
             final Field collectionField = parentEntity.getClass().getDeclaredField(association.getFieldName());
-            final boolean wasAccessible = collectionField.canAccess(parentEntity);
-            if (!wasAccessible) {
-                collectionField.setAccessible(true);
-            }
 
-            final Object entityCollection = collectionField.get(parentEntity);
-
-            if (!wasAccessible) {
-                collectionField.setAccessible(false);
-            }
-
-            return entityCollection;
+            return ReflectionFieldAccessUtils.accessAndGet(parentEntity, collectionField);
         } catch (ReflectiveOperationException e) {
             logger.error("Failed to get collection field", e);
             return null;
         }
     }
 
-    @NotNull
     private Object doInsert(Object entity) {
         final String query = insertQueryBuilder.build(entity);
         logger.info("Generated Insert query: {}", query);
         final Serializable id = jdbcTemplate.insertAndReturnKey(query);
+
         bindId(id, entity);
         return entity;
     }
@@ -136,20 +132,9 @@ public class EntityPersister {
             final Class<?> entityClass = entity.getClass();
             final TableDefinition tableDefinition = getTableDefinition(entity);
             final TableId tableId = tableDefinition.getTableId();
-
             final Field objectDeclaredField = entityClass.getDeclaredField(tableId.getDeclaredName());
 
-            final boolean wasAccessible = objectDeclaredField.canAccess(entity);
-            if (!wasAccessible) {
-                objectDeclaredField.setAccessible(true);
-            }
-
-            objectDeclaredField.set(entity, id);
-
-            if (!wasAccessible) {
-                objectDeclaredField.setAccessible(false);
-            }
-
+            ReflectionFieldAccessUtils.accessAndSet(entity, objectDeclaredField, id);
         } catch (ReflectiveOperationException e) {
             logger.error("Failed to copy row to {}", entity.getClass().getName(), e);
         }
@@ -169,7 +154,7 @@ public class EntityPersister {
     }
 
     public void delete(Object entity) {
-        String query = deleteByIdQueryBuilder.build(entity);
+        String query = deleteQueryBuilder.build(entity);
         jdbcTemplate.execute(query);
     }
 

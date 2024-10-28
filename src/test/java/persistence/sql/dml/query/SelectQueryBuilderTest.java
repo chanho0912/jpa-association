@@ -1,19 +1,16 @@
 package persistence.sql.dml.query;
 
 import domain.Order;
-import domain.OrderItem;
 import org.junit.jupiter.api.Test;
-
-import java.util.ArrayList;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CustomSelectQueryBuilderTest {
+class SelectQueryBuilderTest {
 
     @Test
     void testSelectSingleTable() {
         Order order = new Order("order_number");
-        String selectQuery = new CustomSelectQueryBuilder(order.getClass()).build();
+        String selectQuery = new SelectQueryBuilder(order.getClass()).build();
         assertThat(selectQuery).isEqualTo("SELECT t_ord.order_id AS t_ord_order_id, t_ord.orderNumber AS t_ord_orderNumber FROM orders t_ord;");
     }
 //

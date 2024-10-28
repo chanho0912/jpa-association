@@ -163,4 +163,8 @@ public class TableDefinition {
     public List<JoinColumnDefinition> getJoinColumns() {
         return joinColumns;
     }
+
+    public boolean hasAssociations() {
+        return !associations.isEmpty();
+    }
 }
