@@ -1,6 +1,5 @@
 package persistence.sql.definition;
 
-import jakarta.persistence.JoinColumn;
 import persistence.sql.Dialect;
 import persistence.sql.Queryable;
 
@@ -54,16 +53,6 @@ public class TableColumn implements Queryable {
     @Override
     public String getDeclaredName() {
         return columnDefinition.getDeclaredName();
-    }
-
-    @Override
-    public boolean hasJoinColumn() {
-        return columnDefinition.isJoinColumn();
-    }
-
-    @Override
-    public JoinColumn getJoinColumn() {
-        return columnDefinition.getJoinColumn();
     }
 
 }

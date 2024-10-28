@@ -1,7 +1,5 @@
 package persistence.sql;
 
-import jakarta.persistence.JoinColumn;
-
 public interface Queryable {
 
     void applyToCreateTableQuery(StringBuilder query, Dialect dialect);
@@ -15,9 +13,5 @@ public interface Queryable {
     String getColumnName();
 
     String getDeclaredName();
-
-    boolean hasJoinColumn();
-
-    JoinColumn getJoinColumn();
 
 }

@@ -48,8 +48,7 @@ public class TableDefinition {
 
     @NotNull
     private static List<TableAssociationDefinition> determineAssociations(Class<?> entityClass) {
-        Field[] fields = entityClass.getDeclaredFields();
-        List<Field> collectionFields = Arrays.stream(fields)
+        final List<Field> collectionFields = Arrays.stream(entityClass.getDeclaredFields())
                 .filter(field -> Collection.class.isAssignableFrom(field.getType()))
                 .toList();
 
@@ -58,18 +57,14 @@ public class TableDefinition {
         }
 
         return collectionFields.stream()
-                .map(field -> new TableAssociationDefinition(getGenericActualType(field), field, ""))
+                .map(field -> new TableAssociationDefinition(getGenericActualType(field), field))
                 .toList();
     }
 
     @NotNull
     private static Class<?> getGenericActualType(Field field) {
         final Type genericType = field.getGenericType();
-        final ParameterizedType parameterizedType = (ParameterizedType) genericType;
-        final Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-        if (actualTypeArguments.length != 1) {
-            throw new IllegalArgumentException("Collection must have exactly one generic type");
-        }
+        final Type[] actualTypeArguments = ((ParameterizedType) genericType).getActualTypeArguments();
 
         return (Class<?>) actualTypeArguments[0];
     }

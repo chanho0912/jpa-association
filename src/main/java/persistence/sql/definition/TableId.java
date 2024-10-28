@@ -3,7 +3,6 @@ package persistence.sql.definition;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import persistence.sql.Dialect;
 import persistence.sql.Queryable;
 import persistence.sql.ddl.query.AutoKeyGenerationStrategy;
@@ -67,16 +66,6 @@ public class TableId implements Queryable {
     @Override
     public String getDeclaredName() {
         return columnDefinition.getDeclaredName();
-    }
-
-    @Override
-    public boolean hasJoinColumn() {
-        return false;
-    }
-
-    @Override
-    public JoinColumn getJoinColumn() {
-        return null;
     }
 
     @Override
