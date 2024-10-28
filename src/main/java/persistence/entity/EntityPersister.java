@@ -146,7 +146,7 @@ public class EntityPersister {
         jdbcTemplate.execute(query);
     }
 
-    private TableDefinition getTableDefinition(Object entity) {
+    public TableDefinition getTableDefinition(Object entity) {
         if (!tableDefinitions.containsKey(entity.getClass())) {
             tableDefinitions.put(entity.getClass(), new TableDefinition(entity.getClass()));
         }

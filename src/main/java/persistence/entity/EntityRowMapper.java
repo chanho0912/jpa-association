@@ -3,16 +3,13 @@ package persistence.entity;
 import common.AliasRule;
 import common.ReflectionFieldAccessUtils;
 import jdbc.RowMapper;
-import org.jetbrains.annotations.NotNull;
 import persistence.sql.Queryable;
 import persistence.sql.definition.TableAssociationDefinition;
 import persistence.sql.definition.TableDefinition;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -49,7 +46,7 @@ public class EntityRowMapper<T> implements RowMapper<T> {
                         setField(resultSet, association.getAssociatedEntityClass(), field, associatedInstance);
                     }
 
-                    final Collection<Object> entityCollection = getCollectionField(instance, association);
+                    final Collection<Object> entityCollection = association.getCollectionField(instance);
                     entityCollection.add(associatedInstance);
                 }
             } while (resultSet.next());
@@ -57,20 +54,6 @@ public class EntityRowMapper<T> implements RowMapper<T> {
         } catch (ReflectiveOperationException e) {
             throw new SQLException("Failed to map row to " + clazz.getName(), e);
         }
-    }
-
-    private Collection<Object> getCollectionField(
-            T instance, TableAssociationDefinition collection
-    ) throws NoSuchFieldException, IllegalAccessException {
-        final Field collectionField = clazz.getDeclaredField(collection.getFieldName());
-
-        Collection<Object> entityCollection = (Collection<Object>) ReflectionFieldAccessUtils.accessAndGet(instance, collectionField);
-        if (entityCollection == null) {
-            entityCollection = new ArrayList<>();
-            collectionField.set(instance, entityCollection);
-        }
-
-        return entityCollection;
     }
 
     private void setField(ResultSet resultSet, Class<?> entityClass,
