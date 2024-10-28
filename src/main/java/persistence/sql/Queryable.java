@@ -1,5 +1,7 @@
 package persistence.sql;
 
+import persistence.sql.definition.ColumnDefinition;
+
 public interface Queryable {
 
     void applyToCreateTableQuery(StringBuilder query, Dialect dialect);
@@ -14,4 +16,5 @@ public interface Queryable {
 
     String getDeclaredName();
 
+    ColumnDefinition getColumnDefinition();
 }

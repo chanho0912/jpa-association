@@ -13,8 +13,8 @@ class SelectQueryBuilderTest {
         Order order = new Order("order_number");
         String selectQuery = new SelectQueryBuilder(order.getClass()).build(1);
         assertThat(selectQuery).isEqualTo(
-                "SELECT orders.id AS orders_id, orders.orderNumber AS orders_orderNumber " +
-                        "FROM orders WHERE orders.id = 1;");
+                "SELECT orders.order_id AS orders_order_id, orders.orderNumber AS orders_orderNumber " +
+                        "FROM orders WHERE orders.order_id = 1;");
     }
 
     @Test
@@ -29,11 +29,11 @@ class SelectQueryBuilderTest {
 
         assertThat(selectQuery.build(1)).isEqualTo(
                 "SELECT " +
-                        "orders.id AS orders_id, orders.orderNumber AS orders_orderNumber, " +
+                        "orders.order_id AS orders_order_id, orders.orderNumber AS orders_orderNumber, " +
                         "order_items.id AS order_items_id, order_items.product AS order_items_product, order_items.quantity AS order_items_quantity " +
                         "FROM orders " +
                         "LEFT JOIN order_items " +
-                        "ON order_items.order_id = orders.id " +
-                        "WHERE orders.id = 1;");
+                        "ON order_items.order_id = orders.order_id " +
+                        "WHERE orders.order_id = 1;");
     }
 }

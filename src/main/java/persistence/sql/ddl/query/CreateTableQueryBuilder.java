@@ -3,14 +3,9 @@ package persistence.sql.ddl.query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import persistence.sql.Dialect;
-import persistence.sql.Queryable;
 import persistence.sql.definition.ColumnDefinition;
-import persistence.sql.definition.JoinColumnDefinition;
 import persistence.sql.definition.TableDefinition;
 import persistence.sql.definition.TableId;
-
-import java.util.List;
-import java.util.Objects;
 
 public class CreateTableQueryBuilder {
     private final StringBuilder query;
@@ -19,7 +14,7 @@ public class CreateTableQueryBuilder {
     public CreateTableQueryBuilder(
             Dialect dialect,
             Class<?> entityClass,
-            Class<?> associatedClass
+            Class<?> parentClass
     ) {
         this.query = new StringBuilder();
 
@@ -29,15 +24,17 @@ public class CreateTableQueryBuilder {
         query.append(" (");
 
         tableDefinition.withIdColumns().forEach(column -> column.applyToCreateTableQuery(query, dialect));
-        if (associatedClass != null) {
-            TableDefinition associatedTableDefinition = new TableDefinition(associatedClass);
-            List<JoinColumnDefinition> associatedJoinColumns = associatedTableDefinition.getJoinColumns();
-            if (!associatedJoinColumns.isEmpty()) {
-                associatedJoinColumns
-                        // TODO 타입 변경
-                        .forEach(joinColumn -> query.append(joinColumn.getJoinColumnName() + " " + "BIGINT" + ", "));
-
-            }
+        if (parentClass != null) {
+            TableDefinition parentTableDefinition = new TableDefinition(parentClass);
+            parentTableDefinition.getAssociations().forEach(association -> {
+                if (association.getAssociatedEntityClass().equals(entityClass)) {
+                    if (association.getJoinColumnName() != null) {
+                        query.append(association.getJoinColumnName() + " " + dialect.translateType(
+                                getColumnDefinition(parentTableDefinition, association.getJoinColumnName())
+                        ) + ", ");
+                    }
+                }
+            });
 
         }
 
@@ -46,13 +43,8 @@ public class CreateTableQueryBuilder {
         query.append(");");
     }
 
-    private static ColumnDefinition getColumnDefinition(TableDefinition tableDefinition,
-                                                        JoinColumnDefinition joinColumn) {
-        if (Objects.equals(tableDefinition.getTableId().getColumnName(), joinColumn.getJoinColumnName())) {
-            return tableDefinition.getTableId().getColumnDefinition();
-        }
-
-        throw new IllegalArgumentException("Column not found");
+    private ColumnDefinition getColumnDefinition(TableDefinition parentTableDefinition, String joinColumnName) {
+        return parentTableDefinition.getColumn(joinColumnName).getColumnDefinition();
     }
 
     public String build() {

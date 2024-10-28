@@ -2,7 +2,6 @@ package persistence.sql.definition;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +22,6 @@ public class TableDefinition {
     private final Class<?> entityClass;
     private final List<TableColumn> columns;
     private final List<TableAssociationDefinition> associations;
-    private final List<JoinColumnDefinition> joinColumns;
     private final TableId tableId;
 
     public TableDefinition(Class<?> entityClass) {
@@ -36,14 +34,6 @@ public class TableDefinition {
         this.associations = determineAssociations(entityClass);
         this.columns = createTableColumns(fields);
         this.tableId = new TableId(fields);
-        this.joinColumns = createJoinColumns(fields);
-    }
-
-    private static List<JoinColumnDefinition> createJoinColumns(Field[] fields) {
-        return Arrays.stream(fields)
-                .filter(field -> field.isAnnotationPresent(JoinColumn.class))
-                .map(JoinColumnDefinition::new)
-                .toList();
     }
 
     @NotNull
@@ -160,11 +150,19 @@ public class TableDefinition {
         return associations;
     }
 
-    public List<JoinColumnDefinition> getJoinColumns() {
-        return joinColumns;
-    }
-
     public boolean hasAssociations() {
         return !associations.isEmpty();
+    }
+
+    public boolean hasColumn(String name) {
+        return columns.stream()
+                .anyMatch(column -> column.getColumnName().equals(name));
+    }
+
+    public Queryable getColumn(String name) {
+        return withIdColumns().stream()
+                .filter(column -> column.getColumnName().equals(name))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Column not found"));
     }
 }

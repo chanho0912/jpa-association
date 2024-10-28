@@ -2,6 +2,7 @@ package persistence.sql.definition;
 
 import common.ReflectionFieldAccessUtils;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 
@@ -11,14 +12,15 @@ import java.util.Collection;
 
 public class TableAssociationDefinition {
     private final TableDefinition associatedTableDefinition;
-    private final JoinColumnDefinition joinColumnDefinition;
+    private JoinColumn joinColumn;
     private final FetchType fetchType;
     private final String fieldName;
 
-    public TableAssociationDefinition(Class<?> associatedEntityClass,
-                                      Field field) {
+    public TableAssociationDefinition(
+            Class<?> associatedEntityClass,
+            Field field) {
+        this.joinColumn = field.getAnnotation(JoinColumn.class);
         this.associatedTableDefinition = new TableDefinition(associatedEntityClass);
-        this.joinColumnDefinition = new JoinColumnDefinition(field);
         this.fieldName = field.getName();
         this.fetchType = getFetchType(field);
     }
@@ -56,7 +58,10 @@ public class TableAssociationDefinition {
     }
 
     public String getJoinColumnName() {
-        return joinColumnDefinition.getJoinColumnName();
+        if (joinColumn != null) {
+            return joinColumn.name();
+        }
+        return "";
     }
 
     public Collection<Object> getCollectionField(Object instance) throws NoSuchFieldException {

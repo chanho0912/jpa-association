@@ -45,10 +45,9 @@ public class Application {
             order.getOrderItems().add(orderItem2);
 
             em.persist(order);
-//            em.persist(orderItem);
-//            em.persist(orderItem2);
-//
-//            em.merge(order);
+            em.clear();
+
+            em.find(Order.class, 1L);
             server.stop();
         } catch (Exception e) {
             logger.error("Error occurred", e);
