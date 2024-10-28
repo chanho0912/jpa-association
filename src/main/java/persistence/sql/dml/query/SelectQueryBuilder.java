@@ -4,6 +4,7 @@ import common.AliasRule;
 import persistence.sql.definition.TableAssociationDefinition;
 import persistence.sql.definition.TableDefinition;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
@@ -35,7 +36,7 @@ public class SelectQueryBuilder {
         return this;
     }
 
-    public String build() {
+    public String build(Serializable id) {
         final StringBuilder query = new StringBuilder("SELECT ");
         query.append(columnsClause());
         query.append(" FROM ");
@@ -52,6 +53,7 @@ public class SelectQueryBuilder {
             query.append(".");
             query.append(tableDefinition.getTableId().getColumnName());
         }
+        whereClause(query, id);
         query.append(";");
         return query.toString();
     }
@@ -70,6 +72,21 @@ public class SelectQueryBuilder {
         });
 
         return joiner.toString();
+    }
+
+    private void whereClause(StringBuilder selectQuery, Serializable id) {
+        selectQuery.append(" WHERE ");
+        selectQuery.append(tableDefinition.getTableName())
+                .append(".")
+                .append(tableDefinition.getTableId().getColumnName())
+                .append(" = ");
+
+        if (id instanceof String) {
+            selectQuery.append("'").append(id).append("';");
+            return;
+        }
+
+        selectQuery.append(id);
     }
 
 }

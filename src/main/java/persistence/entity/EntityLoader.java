@@ -24,7 +24,7 @@ public class EntityLoader {
             }
         });
 
-        final String query = queryBuilder.build();
+        final String query = queryBuilder.build(entityKey.id());
         logger.info("Executing custom select query: {}", query);
 
         final Object queried = jdbcTemplate.queryForObject(query,
