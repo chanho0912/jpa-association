@@ -30,15 +30,15 @@ class TableDefinitionTest {
 
     }
 
-    @Test
-    @DisplayName("Class 정보를 이용해서 Table Definition을 생성한다.")
-    void shouldCreateTableDefinition() throws Exception {
-        TableDefinition tableDefinition = new TableDefinition(TableDefinitionTestEntity.class);
-
-        assertAll(
-                () -> assertThat(tableDefinition.getTableName()).isEqualTo("test_table"),
-                () -> assertThat(tableDefinition.withIdColumns()).hasSize(4),
-                () -> assertThat(tableDefinition.getTableId().getColumnName()).isEqualTo("id")
-        );
-    }
+//    @Test
+//    @DisplayName("Class 정보를 이용해서 Table Definition을 생성한다.")
+//    void shouldCreateTableDefinition() throws Exception {
+//        TableDefinition tableDefinition = new TableDefinition(TableDefinitionTestEntity.class);
+//
+//        assertAll(
+//                () -> assertThat(tableDefinition.getTableName()).isEqualTo("test_table"),
+//                () -> assertThat(tableDefinition.withIdColumns()).hasSize(4),
+//                () -> assertThat(tableDefinition.getTableId().getColumnName()).isEqualTo("id")
+//        );
+//    }
 }

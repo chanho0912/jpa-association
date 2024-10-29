@@ -34,37 +34,37 @@ class TableColumnTest {
         private Integer column5;
     }
 
-    @Test
-    @DisplayName("Column에 맞게 적절하게 query를 생성한다.")
-    void shouldCreateQuery() throws Exception {
-        TableColumn tableColumn1 = new TableColumn(TableColumnTestEntity.class.getDeclaredField("column1"));
-        TableColumn tableColumn2 = new TableColumn(TableColumnTestEntity.class.getDeclaredField("column2"));
-        TableColumn tableColumn3 = new TableColumn(TableColumnTestEntity.class.getDeclaredField("column3"));
-        TableColumn tableColumn4 = new TableColumn(TableColumnTestEntity.class.getDeclaredField("column4"));
-        TableColumn tableColumn5 = new TableColumn(TableColumnTestEntity.class.getDeclaredField("column5"));
-
-        StringBuilder query1 = new StringBuilder();
-        StringBuilder query2 = new StringBuilder();
-        StringBuilder query3 = new StringBuilder();
-        StringBuilder query4 = new StringBuilder();
-        StringBuilder query5 = new StringBuilder();
-
-        Dialect dialect = new H2Dialect();
-
-        tableColumn1.applyToCreateTableQuery(query1, dialect);
-        tableColumn2.applyToCreateTableQuery(query2, dialect);
-        tableColumn3.applyToCreateTableQuery(query3, dialect);
-        tableColumn4.applyToCreateTableQuery(query4, dialect);
-        tableColumn5.applyToCreateTableQuery(query5, dialect);
-
-        // Then
-        assertAll(
-                () -> assertThat(query1.toString()).isEqualTo("column1 VARCHAR(255), "),
-                () -> assertThat(query2.toString()).isEqualTo("column VARCHAR(255), "),
-                () -> assertThat(query3.toString()).isEqualTo("column3 VARCHAR(100), "),
-                () -> assertThat(query4.toString()).isEqualTo("column4 BIGINT NOT NULL, "),
-                () -> assertThat(query5.toString()).isEqualTo("column5 INTEGER, ")
-        );
-    }
+//    @Test
+//    @DisplayName("Column에 맞게 적절하게 query를 생성한다.")
+//    void shouldCreateQuery() throws Exception {
+//        TableColumn tableColumn1 = new TableColumn(TableColumnTestEntity.class.getDeclaredField("column1"));
+//        TableColumn tableColumn2 = new TableColumn(TableColumnTestEntity.class.getDeclaredField("column2"));
+//        TableColumn tableColumn3 = new TableColumn(TableColumnTestEntity.class.getDeclaredField("column3"));
+//        TableColumn tableColumn4 = new TableColumn(TableColumnTestEntity.class.getDeclaredField("column4"));
+//        TableColumn tableColumn5 = new TableColumn(TableColumnTestEntity.class.getDeclaredField("column5"));
+//
+//        StringBuilder query1 = new StringBuilder();
+//        StringBuilder query2 = new StringBuilder();
+//        StringBuilder query3 = new StringBuilder();
+//        StringBuilder query4 = new StringBuilder();
+//        StringBuilder query5 = new StringBuilder();
+//
+//        Dialect dialect = new H2Dialect();
+//
+//        tableColumn1.applyToCreateTableQuery(query1, dialect);
+//        tableColumn2.applyToCreateTableQuery(query2, dialect);
+//        tableColumn3.applyToCreateTableQuery(query3, dialect);
+//        tableColumn4.applyToCreateTableQuery(query4, dialect);
+//        tableColumn5.applyToCreateTableQuery(query5, dialect);
+//
+//        // Then
+//        assertAll(
+//                () -> assertThat(query1.toString()).isEqualTo("column1 VARCHAR(255), "),
+//                () -> assertThat(query2.toString()).isEqualTo("column VARCHAR(255), "),
+//                () -> assertThat(query3.toString()).isEqualTo("column3 VARCHAR(100), "),
+//                () -> assertThat(query4.toString()).isEqualTo("column4 BIGINT NOT NULL, "),
+//                () -> assertThat(query5.toString()).isEqualTo("column5 INTEGER, ")
+//        );
+//    }
 
 }

@@ -1,6 +1,7 @@
 package persistence.sql.dml.query;
 
 import common.AliasRule;
+import persistence.sql.definition.EntityTableMapper;
 import persistence.sql.definition.TableAssociationDefinition;
 import persistence.sql.definition.TableDefinition;
 
@@ -9,28 +10,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
-public class SelectQueryBuilder {
+public class SelectQueryBuilder implements BaseQueryBuilder {
 
     private final TableDefinition tableDefinition;
     private final List<String> columns = new ArrayList<>();
 
-    private TableAssociationDefinition joinTableDefinition;
+    private TableDefinition joinTableDefinition;
     private final List<String> joinTableColumns = new ArrayList<>();
 
     public SelectQueryBuilder(Class<?> entityClass) {
         final TableDefinition tableDefinition = new TableDefinition(entityClass);
         this.tableDefinition = tableDefinition;
-        tableDefinition.withIdColumns().forEach(column -> {
-                    columns.add(column.getColumnName());
+        tableDefinition.getColumns().forEach(column -> {
+                    columns.add(column.getDatabaseColumnName());
                 }
         );
     }
 
     public SelectQueryBuilder join(TableAssociationDefinition tableAssociationDefinition) {
         final TableDefinition joinTableDefinition = tableAssociationDefinition.getAssociatedTableDefinition();
-        this.joinTableDefinition = tableAssociationDefinition;
-        joinTableDefinition.withIdColumns().forEach(column -> {
-                    joinTableColumns.add(column.getColumnName());
+        this.joinTableDefinition = new TableDefinition(joinTableDefinition.getEntityClass());
+
+        this.joinTableDefinition.getColumns().forEach(column -> {
+                    joinTableColumns.add(column.getDatabaseColumnName());
                 }
         );
         return this;
@@ -38,23 +40,22 @@ public class SelectQueryBuilder {
 
     public String build(Serializable id) {
         final StringBuilder query = new StringBuilder("SELECT ");
-        query.append(columnsClause());
-        query.append(" FROM ");
-        query.append(tableDefinition.getTableName());
+        query.append(columnsClause())
+                .append(" FROM ")
+                .append(tableDefinition.getTableName());
         if (joinTableDefinition != null) {
-            query.append(" LEFT JOIN ");
-            query.append(joinTableDefinition.getTableName());
-            query.append(" ON ");
-            query.append(joinTableDefinition.getTableName());
-            query.append(".");
-            query.append(joinTableDefinition.getJoinColumnName());
-            query.append(" = ");
-            query.append(tableDefinition.getTableName());
-            query.append(".");
-            query.append(tableDefinition.getTableId().getColumnName());
+            query.append(" LEFT JOIN ")
+                    .append(joinTableDefinition.getTableName())
+                    .append(" ON ")
+                    .append(joinTableDefinition.getTableName())
+                    .append(".")
+                    .append(tableDefinition.getJoinColumnName(joinTableDefinition.getEntityClass()))
+                    .append(" = ")
+                    .append(tableDefinition.getTableName())
+                    .append(".")
+                    .append(tableDefinition.getIdColumnName());
         }
         whereClause(query, id);
-        query.append(";");
         return query.toString();
     }
 
@@ -75,18 +76,13 @@ public class SelectQueryBuilder {
     }
 
     private void whereClause(StringBuilder selectQuery, Serializable id) {
-        selectQuery.append(" WHERE ");
-        selectQuery.append(tableDefinition.getTableName())
+        selectQuery
+                .append(" WHERE ")
+                .append(tableDefinition.getTableName())
                 .append(".")
-                .append(tableDefinition.getTableId().getColumnName())
-                .append(" = ");
-
-        if (id instanceof String) {
-            selectQuery.append("'").append(id).append("';");
-            return;
-        }
-
-        selectQuery.append(id);
+                .append(tableDefinition.getIdColumnName())
+                .append(" = ")
+                .append(getQuoted(id)).append(";");
     }
 
 }
