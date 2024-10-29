@@ -77,10 +77,10 @@ public class EntityManagerImpl implements EntityManager {
         addEntityInContext(entityKey, entity);
         addManagedEntityEntry(entityKey, entityEntry);
 
-        manageChildEntity(entityPersister, entity);
+        saveChildEntity(entityPersister, entity);
     }
 
-    private void manageChildEntity(EntityPersister entityPersister, Object entity) {
+    private void saveChildEntity(EntityPersister entityPersister, Object entity) {
         final Collection<Object> childCollections = entityPersister.getChildCollections(entity);
 
         if (childCollections.isEmpty()) {
