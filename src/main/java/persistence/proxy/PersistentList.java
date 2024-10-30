@@ -180,7 +180,7 @@ public class PersistentList<T> implements PersistentCollection, List<T>, Invocat
         }
 
         if (method.getName().equals("getImplementation")) {
-            return target;
+            return getImplementation();
         }
 
         return method.invoke(target, args);

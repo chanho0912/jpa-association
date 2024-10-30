@@ -36,8 +36,8 @@ public class EntityLoader {
 
     public <T> Collection<T> loadLazyCollection(Class<T> targetClass, EntityTableMapper ownerTableMapper) {
         final SelectQueryBuilder queryBuilder = new SelectQueryBuilder(targetClass);
-        String joinColumnName = ownerTableMapper.getJoinColumnName(targetClass);
-        Object value = ownerTableMapper.getValue(joinColumnName);
+        final String joinColumnName = ownerTableMapper.getJoinColumnName(targetClass);
+        final Object value = ownerTableMapper.getValue(joinColumnName);
 
         final String query = queryBuilder
                 .where(joinColumnName, value.toString())
