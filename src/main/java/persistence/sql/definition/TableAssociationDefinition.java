@@ -12,6 +12,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class TableAssociationDefinition {
     private final TableDefinition associatedTableDefinition;
@@ -62,6 +63,10 @@ public class TableAssociationDefinition {
         return fetchType == FetchType.EAGER;
     }
 
+    public boolean isFetchLazy() {
+        return fetchType == FetchType.LAZY;
+    }
+
     public String getJoinColumnName() {
         if (joinColumn != null) {
             return joinColumn.name();
@@ -78,6 +83,11 @@ public class TableAssociationDefinition {
         }
 
         return entityCollection;
+    }
+
+    public void setCollectionField(Object instance, List collection) throws NoSuchFieldException {
+        final Field field = instance.getClass().getDeclaredField(getFieldName());
+        ReflectionFieldAccessUtils.accessAndSet(instance, field, collection);
     }
 
     public Class<?> getEntityClass() {

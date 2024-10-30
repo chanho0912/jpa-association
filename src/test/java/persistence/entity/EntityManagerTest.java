@@ -24,6 +24,7 @@ import persistence.sql.definition.TableDefinition;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -308,6 +309,27 @@ public class EntityManagerTest {
                 () -> assertThat(persistedOrder.getOrderItems().get(1).getProduct()).isEqualTo("product2"),
                 () -> assertThat(persistedOrder.getOrderItems().get(1).getQuantity()).isEqualTo(2)
         );
+    }
+
+    @Test
+    @DisplayName("em.findAll test")
+    void testFindAll() throws SQLException {
+        EntityManager em = new EntityManagerImpl(new JdbcTemplate(server.getConnection()), new PersistenceContextImpl());
+        Order order = new Order("order_number");
+        OrderItem orderItem1 = new OrderItem("product1", 1);
+        OrderItem orderItem2 = new OrderItem("product2", 2);
+
+
+        order.getOrderItems().add(orderItem1);
+        order.getOrderItems().add(orderItem2);
+
+        em.persist(order);
+        em.clear();
+
+        EntityLoader el = new EntityLoader(jdbcTemplate);
+        Collection<OrderItem> orderItems = el.loadLazyCollection(OrderItem.class, new EntityTableMapper(order));
+        assertThat(orderItems).hasSize(2);
+
     }
 
     public static void printAllRowsAndColumns(ResultSet resultSet) throws SQLException {

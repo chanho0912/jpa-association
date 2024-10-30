@@ -42,24 +42,26 @@ public class EntityRowMapper<T> implements RowMapper<T> {
                 }
 
                 for (TableAssociationDefinition association : associations) {
-                    if (!association.isFetchEager()) {
-                        continue;
-                    }
-
                     final Class<?> associatedEntityClass = association.getEntityClass();
                     final Object associatedInstance = newInstance(associatedEntityClass);
-                    for (ColumnDefinitionAware column : association.getAssociatedTableDefinition().getColumns()) {
-                        final String databaseColumnName = column.getDatabaseColumnName();
-                        final Field objectDeclaredField = associatedEntityClass.getDeclaredField(column.getEntityFieldName());
+                    if (association.isFetchEager()) {
+                        for (ColumnDefinitionAware column : association.getAssociatedTableDefinition().getColumns()) {
+                            final String databaseColumnName = column.getDatabaseColumnName();
+                            final Field objectDeclaredField = associatedEntityClass.getDeclaredField(column.getEntityFieldName());
 
-                        ReflectionFieldAccessUtils.accessAndSet(associatedInstance, objectDeclaredField,
-                                resultSet.getObject(AliasRule.buildWith(association.getAssociatedTableDefinition().getTableName(),
-                                        databaseColumnName))
-                        );
+                            ReflectionFieldAccessUtils.accessAndSet(associatedInstance, objectDeclaredField,
+                                    resultSet.getObject(AliasRule.buildWith(association.getAssociatedTableDefinition().getTableName(),
+                                            databaseColumnName))
+                            );
+                        }
+
+                        final Collection<Object> entityCollection = association.getCollectionField(instance);
+                        entityCollection.add(associatedInstance);
+//                        continue;
                     }
 
-                    final Collection<Object> entityCollection = association.getCollectionField(instance);
-                    entityCollection.add(associatedInstance);
+                    // TODO setProxyCollection
+
                 }
             } while (resultSet.next());
             return instance;

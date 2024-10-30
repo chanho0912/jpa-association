@@ -63,6 +63,16 @@ public class EntityTableMapper {
         return null;
     }
 
+    public Object getValue(String databaseColumnName) {
+        for (ColumnDefinitionAware column : tableDefinition.getColumns()) {
+            if (column.getDatabaseColumnName().equals(databaseColumnName)) {
+                return getValue(column);
+            }
+        }
+        
+        return null;
+    }
+
     public List<? extends ColumnDefinitionAware> hasValueColumns() {
         return tableDefinition.getColumns().stream()
                 .filter(this::hasValue)

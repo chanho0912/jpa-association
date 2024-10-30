@@ -1,19 +1,22 @@
 package persistence.sql.dml.query;
 
 import common.AliasRule;
-import persistence.sql.definition.EntityTableMapper;
+import common.SqlLogger;
 import persistence.sql.definition.TableAssociationDefinition;
 import persistence.sql.definition.TableDefinition;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 public class SelectQueryBuilder implements BaseQueryBuilder {
-
+    private final StringBuilder query = new StringBuilder();
     private final TableDefinition tableDefinition;
     private final List<String> columns = new ArrayList<>();
+    private final Map<String, String> conditions = new HashMap<>();
 
     private TableDefinition joinTableDefinition;
     private final List<String> joinTableColumns = new ArrayList<>();
@@ -38,25 +41,16 @@ public class SelectQueryBuilder implements BaseQueryBuilder {
         return this;
     }
 
-    public String build(Serializable id) {
-        final StringBuilder query = new StringBuilder("SELECT ");
-        query.append(columnsClause())
+    public SelectQueryBuilder where(String column, String value) {
+        conditions.put(column, value);
+        return this;
+    }
+
+    private void selectClause() {
+        query.append("SELECT ")
+                .append(columnsClause())
                 .append(" FROM ")
                 .append(tableDefinition.getTableName());
-        if (joinTableDefinition != null) {
-            query.append(" LEFT JOIN ")
-                    .append(joinTableDefinition.getTableName())
-                    .append(" ON ")
-                    .append(joinTableDefinition.getTableName())
-                    .append(".")
-                    .append(tableDefinition.getJoinColumnName(joinTableDefinition.getEntityClass()))
-                    .append(" = ")
-                    .append(tableDefinition.getTableName())
-                    .append(".")
-                    .append(tableDefinition.getIdColumnName());
-        }
-        whereClause(query, id);
-        return query.toString();
     }
 
     private String columnsClause() {
@@ -75,14 +69,61 @@ public class SelectQueryBuilder implements BaseQueryBuilder {
         return joiner.toString();
     }
 
-    private void whereClause(StringBuilder selectQuery, Serializable id) {
-        selectQuery
+    private void joinClause() {
+        if (joinTableDefinition != null) {
+            query.append(" LEFT JOIN ")
+                    .append(joinTableDefinition.getTableName())
+                    .append(" ON ")
+                    .append(joinTableDefinition.getTableName())
+                    .append(".")
+                    .append(tableDefinition.getJoinColumnName(joinTableDefinition.getEntityClass()))
+                    .append(" = ")
+                    .append(tableDefinition.getTableName())
+                    .append(".")
+                    .append(tableDefinition.getIdColumnName());
+        }
+    }
+
+    private void whereClause() {
+        if (conditions.isEmpty()) {
+            return;
+        }
+        final StringJoiner joiner = new StringJoiner(" AND ");
+
+        query.append(" WHERE ");
+        conditions.forEach((column, value) -> {
+            joiner.add(tableDefinition.getTableName() + "." + column + " = " + getQuoted(value));
+        });
+        query.append(joiner);
+    }
+
+    private void whereByIdClause(Serializable id) {
+        query
                 .append(" WHERE ")
                 .append(tableDefinition.getTableName())
                 .append(".")
                 .append(tableDefinition.getIdColumnName())
                 .append(" = ")
                 .append(getQuoted(id)).append(";");
+    }
+
+    public String buildById(Serializable id) {
+        selectClause();
+        joinClause();
+        whereByIdClause(id);
+
+        final String sql = query.toString();
+        SqlLogger.infoSelect(sql);
+        return sql;
+    }
+
+    public String build() {
+        selectClause();
+        whereClause();
+
+        final String sql = query.toString();
+        SqlLogger.infoSelect(sql);
+        return sql;
     }
 
 }

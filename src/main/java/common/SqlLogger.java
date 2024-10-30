@@ -17,4 +17,8 @@ public class SqlLogger {
     public static void infoUpdate(String query) {
         logger.info("Updating with query: {}", query);
     }
+
+    public static void infoSelect(String query) {
+        logger.info("Selecting with query: {}", query);
+    }
 }
