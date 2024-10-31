@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import persistence.entity.EntityLazyLoader;
-import persistence.entity.EntityLoader;
 import persistence.sql.H2Dialect;
 import persistence.sql.SqlType;
 import persistence.sql.ddl.query.CreateTableQueryBuilder;
@@ -26,9 +25,6 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
 
 class TestLazyLoading {
 
@@ -96,8 +92,6 @@ class TestLazyLoading {
         jdbcTemplate.execute("INSERT INTO order_items (product, quantity, order_id) VALUES ('product1', 1, 1)");
         jdbcTemplate.execute("INSERT INTO order_items (product, quantity, order_id) VALUES ('product2', 2, 1)");
 
-        EntityLoader entityLoader = new EntityLoader(jdbcTemplate);
-
         List orderItems = (List) Proxy.newProxyInstance(
                 getClass().getClassLoader(),
                 new Class[]{List.class},
@@ -126,28 +120,5 @@ class TestLazyLoading {
                 );
             }
         };
-    }
-
-    @Test
-    void testGetImplementation() {
-        jdbcTemplate.execute("INSERT INTO orders (orderNumber) VALUES ('order_number')");
-        jdbcTemplate.execute("INSERT INTO order_items (product, quantity, order_id) VALUES ('product1', 1, 1)");
-        jdbcTemplate.execute("INSERT INTO order_items (product, quantity, order_id) VALUES ('product2', 2, 1)");
-
-        Order order = new Order(1L, "order_number");
-        PersistentCollection orderItemsProxy = (PersistentCollection) Proxy.newProxyInstance(
-                getClass().getClassLoader(),
-                new Class[]{PersistentCollection.class},
-                new PersistentList<>(order, OrderItem.class, lazyLoader())
-        );
-
-        List<OrderItem> target = (List<OrderItem>) orderItemsProxy.getImplementation();
-        assertAll(
-                () -> assertThat(target).isNotNull(),
-                () -> assertThat(target).isNotEmpty(),
-                () -> assertThat(target).hasSize(2),
-                () -> assertThat(target.get(0).getProduct()).isEqualTo("product1"),
-                () -> assertThat(target.get(1).getProduct()).isEqualTo("product2")
-        );
     }
 }

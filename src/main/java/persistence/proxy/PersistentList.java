@@ -1,6 +1,5 @@
 package persistence.proxy;
 
-import jdbc.JdbcTemplate;
 import org.jetbrains.annotations.NotNull;
 import persistence.entity.EntityLazyLoader;
 import persistence.sql.definition.EntityTableMapper;
@@ -13,7 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-public class PersistentList<T> implements PersistentCollection, List<T>, InvocationHandler {
+public class PersistentList<T> implements List<T>, LazyInitializer, InvocationHandler {
     private List<T> target;
     private final Class<T> elementType;
     private boolean initialized = false;
@@ -40,11 +39,6 @@ public class PersistentList<T> implements PersistentCollection, List<T>, Invocat
             initialize();
         }
         return target;
-    }
-
-    @Override
-    public Object getOwner() {
-        return owner;
     }
 
     @Override
