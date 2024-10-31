@@ -126,9 +126,9 @@ public class LazyLoadingHandler implements InvocationHandler {
 ## 3단계 - OneToMany (FetchType.LAZY)
 
 ### 요구사항 1 - 로딩 전략에 따른 분기 (FetchType.LAZY)
-- [ ] FetchType.EAGER, FetchType.LAZY 에 따른 로딩 전략에 대한 분기 처리
-  - [ ] FetchType.EAGER 인 경우
-    - [ ] Join Query 실행 및 연관 엔티티 조회
-  - [ ] FetchType.LAZY 인 경우
-    - [ ] Query 실행 및 연관 엔티티 프록시 생성.
+- [x] FetchType.EAGER, FetchType.LAZY 에 따른 로딩 전략에 대한 분기 처리
+  - [x] FetchType.EAGER 인 경우
+    - [x] Join Query 실행 및 연관 엔티티 조회
+  - [x] FetchType.LAZY 인 경우
+    - [x] Query 실행 및 연관 엔티티 프록시 생성.
 ### 요구사항 2 - Proxy 를 활용한 지연 로딩 구현
