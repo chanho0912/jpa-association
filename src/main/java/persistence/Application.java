@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import persistence.entity.EntityManager;
 import persistence.entity.EntityManagerImpl;
-import jdbc.EntityRowMapper;
+import jdbc.EagerFetchRowMapper;
 import persistence.entity.PersistenceContextImpl;
 import persistence.sql.H2Dialect;
 import domain.Person;
@@ -64,7 +64,7 @@ public class Application {
 
     private static void selectAll(JdbcTemplate jdbcTemplate, Class<?> testClass) {
         String query = new SelectAllQueryBuilder().build(testClass);
-        List<Person> people = jdbcTemplate.query(query, new EntityRowMapper<>(Person.class));
+        List<Person> people = jdbcTemplate.query(query, new EagerFetchRowMapper<>(Person.class));
 
         for (Person person : people) {
             logger.info("Person: {}", person);

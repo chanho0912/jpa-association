@@ -4,21 +4,26 @@ import database.DatabaseServer;
 import database.H2;
 import domain.Order;
 import domain.OrderItem;
+import jdbc.EagerFetchRowMapper;
 import jdbc.JdbcTemplate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import persistence.entity.EntityLazyLoader;
 import persistence.entity.EntityLoader;
 import persistence.sql.H2Dialect;
 import persistence.sql.SqlType;
 import persistence.sql.ddl.query.CreateTableQueryBuilder;
 import persistence.sql.ddl.query.DropQueryBuilder;
 import persistence.sql.definition.ColumnDefinitionAware;
+import persistence.sql.definition.EntityTableMapper;
+import persistence.sql.dml.query.SelectQueryBuilder;
 
 import java.lang.reflect.Proxy;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -96,12 +101,31 @@ class TestLazyLoading {
         List orderItems = (List) Proxy.newProxyInstance(
                 getClass().getClassLoader(),
                 new Class[]{List.class},
-                new PersistentList(new Order(1L, "order_number"), entityLoader, OrderItem.class)
+                new PersistentList(new Order(1L, "order_number"), OrderItem.class, lazyLoader())
         );
         logger.info("Proxy Instance Created");
 
         logger.info("Call order item size");
         logger.info("{}", orderItems.size());
+    }
+
+    private static EntityLazyLoader lazyLoader() {
+        return new EntityLazyLoader() {
+            @Override
+            public <T> Collection<T> loadLazyCollection(Class<T> targetClass, EntityTableMapper ownerTableMapper) {
+                final SelectQueryBuilder queryBuilder = new SelectQueryBuilder(targetClass);
+                final String joinColumnName = ownerTableMapper.getJoinColumnName(targetClass);
+                final Object value = ownerTableMapper.getValue(joinColumnName);
+
+                final String query = queryBuilder
+                        .where(joinColumnName, value.toString())
+                        .build();
+
+                return jdbcTemplate.query(query,
+                        new EagerFetchRowMapper<>(targetClass)
+                );
+            }
+        };
     }
 
     @Test
@@ -114,7 +138,7 @@ class TestLazyLoading {
         PersistentCollection orderItemsProxy = (PersistentCollection) Proxy.newProxyInstance(
                 getClass().getClassLoader(),
                 new Class[]{PersistentCollection.class},
-                new PersistentList<>(order, new EntityLoader(jdbcTemplate), OrderItem.class)
+                new PersistentList<>(order, OrderItem.class, lazyLoader())
         );
 
         List<OrderItem> target = (List<OrderItem>) orderItemsProxy.getImplementation();

@@ -1,8 +1,10 @@
 package persistence.entity;
 
-import jdbc.EntityRowMapper;
+import jdbc.EagerFetchRowMapper;
 import jdbc.JdbcTemplate;
+import jdbc.RowMapperFactory;
 import persistence.sql.definition.EntityTableMapper;
+import persistence.sql.definition.TableAssociationDefinition;
 import persistence.sql.definition.TableDefinition;
 import persistence.sql.dml.query.SelectQueryBuilder;
 
@@ -19,16 +21,14 @@ public class EntityLoader {
         final SelectQueryBuilder queryBuilder = new SelectQueryBuilder(entityKey.entityClass());
         final TableDefinition tableDefinition = new TableDefinition(entityKey.entityClass());
 
-        tableDefinition.getAssociations().forEach(association -> {
-            if (association.isFetchEager()) {
-                queryBuilder.join(association);
-            }
-        });
+        tableDefinition.getAssociations().stream()
+                .filter(TableAssociationDefinition::isEager)
+                .forEach(queryBuilder::join);
 
         final String query = queryBuilder.buildById(entityKey.id());
 
         final Object queried = jdbcTemplate.queryForObject(query,
-                new EntityRowMapper<>(entityKey.entityClass())
+                RowMapperFactory.createRowMapper(entityClass, jdbcTemplate)
         );
 
         return entityClass.cast(queried);
@@ -44,7 +44,7 @@ public class EntityLoader {
                 .build();
 
         return jdbcTemplate.query(query,
-                new EntityRowMapper<>(targetClass)
+                new EagerFetchRowMapper<>(targetClass)
         );
     }
 }

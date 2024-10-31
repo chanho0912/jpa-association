@@ -19,7 +19,6 @@ import persistence.sql.ddl.query.CreateTableQueryBuilder;
 import persistence.sql.ddl.query.DropQueryBuilder;
 import persistence.sql.definition.ColumnDefinitionAware;
 import persistence.sql.definition.EntityTableMapper;
-import persistence.sql.definition.TableDefinition;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;

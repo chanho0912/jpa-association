@@ -1,7 +1,8 @@
 package persistence.proxy;
 
+import jdbc.JdbcTemplate;
 import org.jetbrains.annotations.NotNull;
-import persistence.entity.EntityLoader;
+import persistence.entity.EntityLazyLoader;
 import persistence.sql.definition.EntityTableMapper;
 
 import java.lang.reflect.InvocationHandler;
@@ -17,19 +18,19 @@ public class PersistentList<T> implements PersistentCollection, List<T>, Invocat
     private final Class<T> elementType;
     private boolean initialized = false;
     private final Object owner;
-    private final EntityLoader entityLoader;
+    private final EntityLazyLoader lazyLoader;
 
-    public PersistentList(Object owner, EntityLoader entityLoader, Class<T> elementType) {
+    public PersistentList(Object owner, Class<T> elementType,
+                          EntityLazyLoader lazyLoader) {
         this.owner = owner;
         this.target = null;
         this.elementType = elementType;
-        this.entityLoader = entityLoader;
+        this.lazyLoader = lazyLoader;
     }
-
 
     public void initialize() {
         EntityTableMapper ownerTableMapper = new EntityTableMapper(owner);
-        target = (List<T>) entityLoader.loadLazyCollection(elementType, ownerTableMapper);
+        target = (List<T>) lazyLoader.loadLazyCollection(elementType, ownerTableMapper);
         initialized = true;
     }
 
