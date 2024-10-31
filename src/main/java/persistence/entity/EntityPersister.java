@@ -52,6 +52,7 @@ public class EntityPersister {
 
         if (entityTableMapper.hasAssociation()) {
             final List<Object> persistedChildren = insertChildCollections(entity);
+            System.out.println("EntityPersister insert child collection");
             persistedChildren.forEach(child -> updateAssociatedColumns(entity, child));
         }
 

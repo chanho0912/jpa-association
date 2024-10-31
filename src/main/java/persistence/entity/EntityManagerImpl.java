@@ -70,17 +70,17 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     private void saveEntity(Object entity, EntityPersister entityPersister) {
-        final EntityEntry entityEntry = EntityEntry.inSaving();
-
         entityPersister.insert(entity);
+
+        final EntityEntry entityEntry = EntityEntry.inSaving();
         final EntityKey entityKey = new EntityKey(entityPersister.getEntityId(), entity.getClass());
+
         addEntityInContext(entityKey, entity);
         addManagedEntityEntry(entityKey, entityEntry);
-
-        saveChildEntity(entityPersister, entity);
+        manageChildEntity(entityPersister, entity);
     }
 
-    private void saveChildEntity(EntityPersister entityPersister, Object entity) {
+    private void manageChildEntity(EntityPersister entityPersister, Object entity) {
         final Collection<Object> childCollections = entityPersister.getChildCollections(entity);
 
         if (childCollections.isEmpty()) {
@@ -90,8 +90,10 @@ public class EntityManagerImpl implements EntityManager {
         childCollections.forEach(childEntity -> {
             if (childEntity != null) {
                 final EntityPersister childEntityPersister = new EntityPersister(childEntity, jdbcTemplate);
-                if (!childEntityPersister.hasId()) {
-                    saveEntity(childEntity, childEntityPersister);
+                if (childEntityPersister.hasId()) {
+                    EntityKey entityKey = new EntityKey(childEntityPersister.getEntityId(), childEntity.getClass());
+                    addEntityInContext(entityKey, childEntity);
+                    addManagedEntityEntry(entityKey, EntityEntry.inSaving());
                 }
             }
         });
