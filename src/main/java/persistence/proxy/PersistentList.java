@@ -14,22 +14,20 @@ import java.util.ListIterator;
 
 public class PersistentList<T> implements List<T>, LazyInitializer, InvocationHandler {
     private List<T> target;
-    private final Class<T> elementType;
     private boolean initialized = false;
     private final Object owner;
     private final EntityLazyLoader lazyLoader;
 
-    public PersistentList(Object owner, Class<T> elementType,
+    public PersistentList(Object owner,
                           EntityLazyLoader lazyLoader) {
         this.owner = owner;
         this.target = null;
-        this.elementType = elementType;
         this.lazyLoader = lazyLoader;
     }
 
     public void initialize() {
         EntityTableMapper ownerTableMapper = new EntityTableMapper(owner);
-        target = (List<T>) lazyLoader.loadLazyCollection(elementType, ownerTableMapper);
+        target = (List<T>) lazyLoader.loadLazyCollection(ownerTableMapper);
         initialized = true;
     }
 
