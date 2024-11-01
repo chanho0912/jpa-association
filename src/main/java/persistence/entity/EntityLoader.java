@@ -8,9 +8,11 @@ import persistence.sql.dml.query.SelectQueryBuilder;
 
 public class EntityLoader {
     private final JdbcTemplate jdbcTemplate;
+    private final RowMapperFactory rowMapperFactory;
 
     public EntityLoader(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.rowMapperFactory = RowMapperFactory.getInstance();
     }
 
     public <T> T loadEntity(Class<T> entityClass, EntityKey entityKey) {
@@ -24,7 +26,7 @@ public class EntityLoader {
         final String query = queryBuilder.buildById(entityKey.id());
 
         final Object queried = jdbcTemplate.queryForObject(query,
-                RowMapperFactory.createRowMapper(entityClass, jdbcTemplate)
+                rowMapperFactory.createRowMapper(entityClass, jdbcTemplate)
         );
 
         return entityClass.cast(queried);

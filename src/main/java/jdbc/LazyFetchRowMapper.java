@@ -1,11 +1,14 @@
 package jdbc;
 
 import common.ReflectionFieldAccessUtils;
-import persistence.proxy.ProxyFactory;
+import persistence.entity.EntityLazyLoader;
+import persistence.proxy.PersistentList;
 import persistence.sql.definition.TableAssociationDefinition;
 import persistence.sql.definition.TableDefinition;
+import persistence.sql.dml.query.SelectQueryBuilder;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Proxy;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -31,8 +34,33 @@ public class LazyFetchRowMapper<T> extends AbstractRowMapper<T> {
             }
 
             final Field collectionField = clazz.getDeclaredField(association.getFieldName());
-            List proxy = ProxyFactory.getProxy(instance, association.getEntityClass(), jdbcTemplate);
+            List proxy = createProxy(instance, association.getEntityClass(), jdbcTemplate);
             ReflectionFieldAccessUtils.accessAndSet(instance, collectionField, proxy);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public <E> List<E> createProxy(Object instance, Class<E> elementType, JdbcTemplate jdbcTemplate) {
+        return (List<E>) Proxy.newProxyInstance(
+                PersistentList.class.getClassLoader(),
+                new Class[]{List.class},
+                new PersistentList<>(instance, createLazyLoader(elementType))
+        );
+    }
+
+    private EntityLazyLoader createLazyLoader(Class<?> targetClass) {
+        return ownerTableMapper -> {
+            final SelectQueryBuilder queryBuilder = new SelectQueryBuilder(targetClass);
+            final String joinColumnName = ownerTableMapper.getJoinColumnName(targetClass);
+            final Object joinColumnValue = ownerTableMapper.getValue(joinColumnName);
+
+            final String query = queryBuilder
+                    .where(joinColumnName, joinColumnValue.toString())
+                    .build();
+
+            return jdbcTemplate.query(query,
+                    RowMapperFactory.getInstance().createRowMapper(targetClass, jdbcTemplate)
+            );
+        };
     }
 }
