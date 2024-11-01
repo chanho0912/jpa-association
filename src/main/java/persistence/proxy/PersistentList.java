@@ -42,6 +42,11 @@ public class PersistentList<T> implements List<T>, LazyInitializer, InvocationHa
     }
 
     @Override
+    public boolean isInitialized() {
+        return initialized;
+    }
+
+    @Override
     public boolean equals(Object obj) {
         return super.equals(obj);
     }

@@ -17,7 +17,7 @@ public class ProxyFactory {
     @SuppressWarnings("unchecked")
     public static <T> List<T> getProxy(Object instance, Class<T> elementType, JdbcTemplate jdbcTemplate) {
         return (List<T>) Proxy.newProxyInstance(
-                instance.getClass().getClassLoader(),
+                PersistentList.class.getClassLoader(),
                 new Class[]{List.class},
                 new PersistentList<>(instance, elementType, defaultLazyLoader(jdbcTemplate))
         );

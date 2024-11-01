@@ -17,12 +17,14 @@ import persistence.fixtures.TestEagerOrder;
 import persistence.fixtures.TestEagerOrderItem;
 import persistence.fixtures.TestLazyOrder;
 import persistence.fixtures.TestLazyOrderItem;
+import persistence.proxy.PersistentList;
 import persistence.sql.H2Dialect;
 import persistence.sql.SqlType;
 import persistence.sql.ddl.query.CreateTableQueryBuilder;
 import persistence.sql.ddl.query.DropQueryBuilder;
 import persistence.sql.definition.ColumnDefinitionAware;
 
+import java.lang.reflect.Proxy;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
@@ -325,11 +327,15 @@ public class EntityManagerTest {
         entityManager.clear();
 
         TestLazyOrder persistedOrder = entityManager.find(TestLazyOrder.class, 1L);
-        System.out.println("-------------------------After Find----------------------------------");
+
         assertAll(
-                () -> assertThat(persistedOrder.getId()).isEqualTo(1L),
-                () -> assertThat(persistedOrder.getOrderNumber()).isEqualTo("order_number"),
+                () -> assertThat(Proxy.isProxyClass(persistedOrder.getOrderItems().getClass())).isTrue(),
+                () -> assertThat(Proxy.getInvocationHandler(persistedOrder.getOrderItems())).isInstanceOf(PersistentList.class),
+                () -> assertThat(((PersistentList<?>) Proxy.getInvocationHandler(persistedOrder.getOrderItems())).isInitialized()).isFalse(),
+
                 () -> assertThat(persistedOrder.getOrderItems()).hasSize(2),
+
+                () -> assertThat(((PersistentList<?>) Proxy.getInvocationHandler(persistedOrder.getOrderItems())).isInitialized()).isTrue(),
                 () -> assertThat(persistedOrder.getOrderItems().get(0).getId()).isEqualTo(1L),
                 () -> assertThat(persistedOrder.getOrderItems().get(0).getProduct()).isEqualTo("product1"),
                 () -> assertThat(persistedOrder.getOrderItems().get(0).getQuantity()).isEqualTo(1),
