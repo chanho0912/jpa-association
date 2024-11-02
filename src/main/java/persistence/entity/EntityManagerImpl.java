@@ -8,15 +8,16 @@ import java.util.function.Supplier;
 
 public class EntityManagerImpl implements EntityManager {
     private final PersistenceContext persistenceContext;
-    private final JdbcTemplate jdbcTemplate;
     private final EntityLoader entityLoader;
+    private final EntityPersister entityPersister;
 
     public EntityManagerImpl(JdbcTemplate jdbcTemplate,
-                             PersistenceContext persistenceContext) {
+                             PersistenceContext persistenceContext,
+                             EntityPersister entityPersister) {
 
         this.persistenceContext = persistenceContext;
-        this.jdbcTemplate = jdbcTemplate;
         this.entityLoader = new EntityLoader(jdbcTemplate);
+        this.entityPersister = entityPersister;
     }
 
     @Override
@@ -49,14 +50,13 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public void persist(Object entity) {
-        final EntityPersister entityPersister = new EntityPersister(entity, jdbcTemplate);
-        if (entityPersister.hasId()) {
+        if (entityPersister.hasId(entity)) {
             final EntityEntry entityEntry = persistenceContext.getEntityEntry(
-                    new EntityKey(entityPersister.getEntityId(), entity.getClass())
+                    new EntityKey(entityPersister.getEntityId(entity), entity.getClass())
             );
 
             if (entityEntry == null) {
-                throw new IllegalArgumentException("No Entity Entry with id: " + entityPersister.getEntityId());
+                throw new IllegalArgumentException("No Entity Entry with id: " + entityPersister.getEntityId(entity));
             }
 
             if (entityEntry.isManaged()) {
@@ -73,7 +73,7 @@ public class EntityManagerImpl implements EntityManager {
         entityPersister.insert(entity);
 
         final EntityEntry entityEntry = EntityEntry.inSaving();
-        final EntityKey entityKey = new EntityKey(entityPersister.getEntityId(), entity.getClass());
+        final EntityKey entityKey = new EntityKey(entityPersister.getEntityId(entity), entity.getClass());
 
         addEntityInContext(entityKey, entity);
         addManagedEntityEntry(entityKey, entityEntry);
@@ -89,9 +89,8 @@ public class EntityManagerImpl implements EntityManager {
 
         childCollections.forEach(childEntity -> {
             if (childEntity != null) {
-                final EntityPersister childEntityPersister = new EntityPersister(childEntity, jdbcTemplate);
-                if (childEntityPersister.hasId()) {
-                    EntityKey entityKey = new EntityKey(childEntityPersister.getEntityId(), childEntity.getClass());
+                if (entityPersister.hasId(childEntity)) {
+                    EntityKey entityKey = new EntityKey(entityPersister.getEntityId(childEntity), childEntity.getClass());
                     addEntityInContext(entityKey, childEntity);
                     addManagedEntityEntry(entityKey, EntityEntry.inSaving());
                 }
@@ -101,8 +100,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public void remove(Object entity) {
-        final EntityPersister entityPersister = new EntityPersister(entity, jdbcTemplate);
-        final EntityKey entityKey = new EntityKey(entityPersister.getEntityId(), entity.getClass());
+        final EntityKey entityKey = new EntityKey(entityPersister.getEntityId(entity), entity.getClass());
         final EntityEntry entityEntry = persistenceContext.getEntityEntry(entityKey);
         checkManagedEntity(entity, entityEntry);
 
@@ -113,8 +111,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public <T> T merge(T entity) {
-        final EntityPersister entityPersister = new EntityPersister(entity, jdbcTemplate);
-        final EntityKey entityKey = new EntityKey(entityPersister.getEntityId(), entity.getClass());
+        final EntityKey entityKey = new EntityKey(entityPersister.getEntityId(entity), entity.getClass());
         final EntityEntry entityEntry = persistenceContext.getEntityEntry(entityKey);
         checkManagedEntity(entity, entityEntry);
 

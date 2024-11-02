@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import persistence.entity.EntityManager;
 import persistence.entity.EntityManagerImpl;
 import jdbc.EagerFetchRowMapper;
+import persistence.entity.EntityPersister;
 import persistence.entity.PersistenceContextImpl;
 import persistence.sql.H2Dialect;
 import domain.Person;
@@ -30,7 +31,7 @@ public class Application {
             server.start();
 
             final JdbcTemplate jdbcTemplate = new JdbcTemplate(server.getConnection());
-            final EntityManager em = new EntityManagerImpl(jdbcTemplate, new PersistenceContextImpl());
+            final EntityManager em = new EntityManagerImpl(jdbcTemplate, new PersistenceContextImpl(), new EntityPersister(jdbcTemplate));
 
             CreateTableQueryBuilder createOrder = new CreateTableQueryBuilder(new H2Dialect(), Order.class, null);
             CreateTableQueryBuilder createOrderItem = new CreateTableQueryBuilder(new H2Dialect(), OrderItem.class, List.of());

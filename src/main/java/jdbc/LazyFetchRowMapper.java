@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 
 public class LazyFetchRowMapper<T> extends AbstractRowMapper<T> {
@@ -34,32 +35,33 @@ public class LazyFetchRowMapper<T> extends AbstractRowMapper<T> {
             }
 
             final Field collectionField = clazz.getDeclaredField(association.getFieldName());
-            List proxy = createProxy(instance, association.getEntityClass(), jdbcTemplate);
+            List proxy = createProxy(instance, association.getEntityClass());
             ReflectionFieldAccessUtils.accessAndSet(instance, collectionField, proxy);
         }
     }
 
     @SuppressWarnings("unchecked")
-    public <E> List<E> createProxy(Object instance, Class<E> elementType, JdbcTemplate jdbcTemplate) {
+    public <E> List<E> createProxy(Object instance, Class<E> elementType) {
         return (List<E>) Proxy.newProxyInstance(
-                PersistentList.class.getClassLoader(),
+                instance.getClass().getClassLoader(),
                 new Class[]{List.class},
                 new PersistentList<>(instance, createLazyLoader(elementType))
         );
     }
 
-    private EntityLazyLoader createLazyLoader(Class<?> targetClass) {
-        return ownerTableMapper -> {
-            final SelectQueryBuilder queryBuilder = new SelectQueryBuilder(targetClass);
-            final String joinColumnName = ownerTableMapper.getJoinColumnName(targetClass);
-            final Object joinColumnValue = ownerTableMapper.getValue(joinColumnName);
+    private EntityLazyLoader createLazyLoader(Class<?> elementClass) {
+        return owner -> {
+            final TableDefinition ownerDefinition = new TableDefinition(owner.getClass());
 
-            final String query = queryBuilder
+            final String joinColumnName = ownerDefinition.getJoinColumnName(elementClass);
+            final Object joinColumnValue = ownerDefinition.getValue(owner, joinColumnName);
+
+            final String query = new SelectQueryBuilder(elementClass)
                     .where(joinColumnName, joinColumnValue.toString())
                     .build();
 
             return jdbcTemplate.query(query,
-                    RowMapperFactory.getInstance().createRowMapper(targetClass, jdbcTemplate)
+                    RowMapperFactory.getInstance().createRowMapper(elementClass, jdbcTemplate)
             );
         };
     }

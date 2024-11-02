@@ -2,7 +2,6 @@ package persistence.proxy;
 
 import org.jetbrains.annotations.NotNull;
 import persistence.entity.EntityLazyLoader;
-import persistence.sql.definition.EntityTableMapper;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -26,8 +25,7 @@ public class PersistentList<T> implements List<T>, LazyInitializer, InvocationHa
     }
 
     public void initialize() {
-        EntityTableMapper ownerTableMapper = new EntityTableMapper(owner);
-        target = (List<T>) lazyLoader.loadLazyCollection(ownerTableMapper);
+        target = (List<T>) lazyLoader.loadLazyCollection(owner);
         initialized = true;
     }
 

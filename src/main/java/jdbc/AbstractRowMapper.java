@@ -21,6 +21,7 @@ public abstract class AbstractRowMapper<T> implements RowMapper<T> {
     protected abstract void setAssociation(ResultSet resultSet, T instance) throws NoSuchFieldException, SQLException;
 
     @Override
+    @SuppressWarnings("unchecked")
     public T mapRow(ResultSet resultSet) throws SQLException {
         try {
             final T instance = (T) newInstance(clazz);
@@ -41,7 +42,7 @@ public abstract class AbstractRowMapper<T> implements RowMapper<T> {
     }
 
     protected void setColumns(ResultSet resultSet, TableDefinition tableDefinition,
-                            Object instance) throws NoSuchFieldException, SQLException {
+                              Object instance) throws NoSuchFieldException, SQLException {
 
         final Class<?> entityClass = tableDefinition.getEntityClass();
 
